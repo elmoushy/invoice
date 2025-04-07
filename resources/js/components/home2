@@ -1,0 +1,1 @@
+make artisan to add column tax_exemption_reason and tax_exemption_reason_code and (scheme_idenifier_IBT_157_1 must be (8 or 12 or 13 or 14 number)) to table 

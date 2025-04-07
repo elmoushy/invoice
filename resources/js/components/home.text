@@ -1,0 +1,808 @@
+<script>
+import { ref, onMounted } from 'vue';
+import Chart from 'chart.js/auto';
+
+export default {
+  setup() {
+    // Reactive state
+    const darkMode = ref(false);
+    const revenueChart = ref(null);
+    const pieChart = ref(null);
+    const lineChart = ref(null);
+    
+    // Current date formatted
+    const currentDate = ref(new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }));
+    
+    // Sample data - replace with your actual API calls
+    const recentInvoices = ref([
+      { id: 1, number: 'INV-001', buyer: 'Acme Corp', amount: 1950.00, date: new Date('2023-05-12'), status: 'paid' },
+      { id: 2, number: 'INV-002', buyer: 'Globex Inc', amount: 2340.50, date: new Date('2023-05-15'), status: 'pending' },
+      { id: 3, number: 'INV-003', buyer: 'Wayne Enterprises', amount: 1200.00, date: new Date('2023-05-18'), status: 'paid' },
+      { id: 4, number: 'INV-004', buyer: 'Stark Industries', amount: 3500.75, date: new Date('2023-05-20'), status: 'overdue' }
+    ]);
+    
+    const topBuyers = ref([
+      { name: 'Acme Corporation', total: 15400, percentage: 70 },
+      { name: 'Globex Inc', total: 10200, percentage: 55 },
+      { name: 'Wayne Enterprises', total: 8700, percentage: 40 }
+    ]);
+    
+    const statsCards = ref([
+      { label: 'Total Revenue', value: '$24,500', icon: 'fas fa-dollar-sign', bgColor: 'rgba(67, 97, 238, 0.1)' },
+      { label: 'Invoices', value: '34', icon: 'fas fa-file-invoice', bgColor: 'rgba(50, 202, 153, 0.1)' },
+      { label: 'Clients', value: '12', icon: 'fas fa-users', bgColor: 'rgba(255, 161, 91, 0.1)' },
+      { label: 'Due Amount', value: '$5,240', icon: 'fas fa-clock', bgColor: 'rgba(247, 103, 123, 0.1)' }
+    ]);
+    
+    // Methods
+    const updateBodyStyles = () => {
+      if (darkMode.value) {
+      document.body.style.background = "linear-gradient(135deg, #0B2539 0%, #142b3f 100%)";
+      document.body.style.color = "#fff";
+      } else {
+      document.body.style.background = "linear-gradient(135deg, #aecffe 0%, #aecffe 100%)";
+      document.body.style.color = "#aecffe";
+      }
+    };
+
+    const toggleDarkMode = () => {
+      darkMode.value = !darkMode.value;
+      updateBodyStyles();
+    };
+    
+    onMounted(() => {
+      updateBodyStyles();
+    });
+    
+    const formatMoney = (amount) => {
+      return amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    };
+    
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString();
+    };
+    
+    const getStatus = (id) => {
+      const invoice = recentInvoices.value.find(inv => inv.id === id);
+      return invoice ? invoice.status : '';
+    };
+    
+    const getStatusClass = (id) => {
+      const status = getStatus(id);
+      return {
+        'status-paid': status === 'paid',
+        'status-pending': status === 'pending',
+        'status-overdue': status === 'overdue'
+      };
+    };
+    
+    const getBuyerInitials = (name) => {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    };
+    
+    const getBuyerColor = (index) => {
+      const colors = ['#4361ee', '#3a0ca3', '#4cc9f0', '#4895ef'];
+      return colors[index % colors.length];
+    };
+    
+    const getLighterColor = (index) => {
+      const colors = ['#4361ee80', '#3a0ca380', '#4cc9f080', '#4895ef80'];
+      return colors[index % colors.length];
+    };
+    
+    onMounted(() => {
+      // Initialize charts here - this is placeholder code that you'd replace with actual chart initialization
+      if (revenueChart.value) {
+        new Chart(revenueChart.value.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+              label: 'Revenue',
+              data: [12, 19, 3, 5, 2, 3],
+              backgroundColor: 'rgba(67, 97, 238, 0.7)'
+            }]
+          }
+        });
+      }
+      
+      if (pieChart.value) {
+        new Chart(pieChart.value.getContext('2d'), {
+          type: 'pie',
+          data: {
+            labels: ['Products', 'Services', 'Subscriptions'],
+            datasets: [{
+              data: [300, 50, 100],
+              backgroundColor: ['#4361ee', '#3a0ca3', '#4cc9f0']
+            }]
+          }
+        });
+      }
+      
+      if (lineChart.value) {
+        new Chart(lineChart.value.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+              label: 'Invoices',
+              data: [12, 19, 3, 5, 2, 3],
+              borderColor: '#4361ee',
+              tension: 0.4
+            }]
+          }
+        });
+      }
+    });
+    
+    return {
+      darkMode,
+      currentDate,
+      revenueChart,
+      pieChart,
+      lineChart,
+      recentInvoices,
+      topBuyers,
+      statsCards,
+      toggleDarkMode,
+      formatMoney,
+      formatDate,
+      getStatus,
+      getStatusClass,
+      getBuyerInitials,
+      getBuyerColor,
+      getLighterColor
+    };
+  }
+};
+</script>
+
+
+
+
+<template>
+  <div :class="['dashboard', { 'dark-mode': darkMode }]">
+    <!-- Dark/Light Mode Toggle -->
+    <div class="theme-toggle">
+      <button @click="toggleDarkMode">
+        <i v-if="!darkMode" class="fas fa-moon"></i>
+        <i v-else class="fas fa-sun"></i>
+      </button>
+    </div>
+    
+    <div class="container">
+      <div class="welcome-banner">
+        <h1 class="welcome-text">Dashboard</h1>
+        <p class="welcome-date">{{ currentDate }}</p>
+      </div>
+      
+      <div class="dashboard-layout">
+        <!-- Main Content Area -->
+        <div class="main-content">
+          <div class="charts-grid">
+            <div class="chart-card revenue-chart">
+              <h3>Monthly Revenue</h3>
+              <div class="chart-container">
+                <canvas ref="revenueChart" style="margin-top: 50px;"></canvas>
+              </div>
+            </div>
+            
+            <div class="chart-card breakdown-chart">
+              <h3>Revenue Breakdown</h3>
+              <div class="chart-container">
+                <canvas ref="pieChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="chart-card recent-invoices" style="margin-right: -295px; margin-top: 15px;">
+              <div class="card-header">
+                <h3>Recent Invoices</h3>
+              </div>
+              <div class="table-container">
+                <table class="invoice-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th>
+                        <th>Buyer</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="invoice in recentInvoices" :key="invoice.id" class="invoice-row">
+                      <td>{{ invoice.number }}</td>
+                      <td>{{ invoice.buyer }}</td>
+                      <td>${{ formatMoney(invoice.amount) }}</td>
+                      <td>{{ formatDate(invoice.date) }}</td>
+                      <td>
+                        <span class="status-badge" :class="getStatusClass(invoice.id)">
+                          {{ getStatus(invoice.id) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="chart-card trend-chart" >
+              <h3>Invoice Trend</h3>
+              <div class="chart-container">
+                <canvas ref="lineChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="chart-card top-buyers" style="margin-right: -290px;" >
+              <h3>Top Buyers</h3>
+              <div class="buyers-container">
+                <div v-for="(buyer, index) in topBuyers" :key="index" class="buyer-item">
+                  <div class="buyer-info">
+                    <div class="buyer-avatar" :style="{ backgroundColor: getBuyerColor(index) }">
+                      {{ getBuyerInitials(buyer.name) }}
+                    </div>
+                    <div class="buyer-details">
+                      <span class="buyer-name">{{ buyer.name }}</span>
+                      <span class="buyer-amount">${{ formatMoney(buyer.total) }}</span>
+                    </div>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress" :style="{
+                      width: buyer.percentage + '%',
+                      background: `linear-gradient(90deg, ${getBuyerColor(index)}, ${getLighterColor(index)})`
+                    }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+          </div>
+        </div>
+        
+        <!-- Right Sidebar with Stats -->
+        <div class="stats-sidebar">
+          <div class="stats-container">
+            <div class="stat-card" v-for="(stat, index) in statsCards" :key="index">
+              <div class="stat-icon" :style="{ background: stat.bgColor }">
+                <i :class="stat.icon"></i>
+              </div>
+              <div class="stat-content">
+                <h3>{{ stat.value }}</h3>
+                <p>{{ stat.label }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+/* Base Styles */
+.dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e6f2ff 0%, #b5d5f5 100%);
+  color: #212529;
+  padding-bottom: 0;
+  position: relative;
+  overflow-y: auto; 
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+}
+
+.theme-toggle button {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: inherit;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.theme-toggle button:hover {
+  transform: rotate(45deg) scale(1.2);
+}
+
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Dashboard Layout - New Structure */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+}
+
+/* Main Content Area */
+.main-content {
+  min-height: 100%;
+}
+
+/* Stats Sidebar */
+.stats-sidebar {
+  position: sticky;
+  top: 1.5rem;
+  height: fit-content;
+}
+
+/* Stats Container - Vertical Layout */
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Welcome Banner Animations */
+.welcome-banner {
+  margin-bottom: 2rem;
+  animation: fadeInDown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.welcome-text {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: inherit;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #4361ee, #3a0ca3);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGradient 5s ease infinite alternate;
+}
+
+.welcome-date {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0;
+  opacity: 0;
+  animation: fadeIn 0.6s 0.4s forwards;
+}
+
+/* Stats Card Styling */
+.stat-card {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+  transform: translateX(30px);
+  animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card:hover {
+  transform: translateX(-5px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  margin-right: 1.25rem;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: skewX(-30deg);
+  transition: 0.5s;
+}
+
+.stat-card:hover .stat-icon::before {
+  animation: shine 1.5s;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-icon i {
+  font-size: 1.5rem;
+  color: #4361ee;
+}
+
+.stat-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: inherit;
+  margin: 0 0 0.25rem 0;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-content h3 {
+  transform: scale(1.05);
+}
+
+.stat-content p {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Charts Grid - Updated for new layout */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(300px, auto);
+  gap: 1.5rem;
+  perspective: 1000px;
+}
+
+.chart-card {
+  max-height: 520px;
+  background: #ffffff;
+  opacity: 0.3;
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 1.5rem;
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform-origin: center bottom;
+  animation: cardRotateIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.revenue-chart { animation-delay: 0.2s; grid-column: span 6; }
+.breakdown-chart { animation-delay: 0.3s; grid-column: span 6; }
+.recent-invoices { animation-delay: 0.4s; grid-column: span 12; }
+.top-buyers { animation-delay: 0.5s; grid-column: span 6; }
+.trend-chart { animation-delay: 0.6s; grid-column: span 6; }
+
+.chart-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px);
+}
+
+.chart-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: inherit;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.chart-card h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4361ee, #3a0ca3);
+  transition: width 0.6s ease;
+}
+
+.chart-card:hover h3::after {
+  width: 50px;
+}
+
+.chart-container {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoice-table th, 
+.invoice-table td {
+  padding: 1rem;
+  text-align: left;
+  transition: background-color 0.3s ease;
+}
+
+.invoice-table th {
+  font-weight: 500;
+  color: #6c757d;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.invoice-row {
+  position: relative;
+  transition: all 0.3s ease;
+  animation: tableRowFade 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.invoice-row:nth-child(1) { animation-delay: 0.1s; }
+.invoice-row:nth-child(2) { animation-delay: 0.2s; }
+.invoice-row:nth-child(3) { animation-delay: 0.3s; }
+.invoice-row:nth-child(4) { animation-delay: 0.4s; }
+.invoice-row:nth-child(5) { animation-delay: 0.5s; }
+
+.invoice-row:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+  transform: translateX(5px);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.invoice-row:hover .status-badge {
+  transform: scale(1.05);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Top Buyers Section */
+.buyers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.buyer-item {
+  padding: 0.75rem 0;
+  transition: all 0.3s ease;
+  transform: translateX(-20px);
+  opacity: 0;
+  animation: slideInRight 0.5s forwards;
+}
+
+.top-buyers .buyer-item:nth-child(1) { animation-delay: 0.7s; }
+.top-buyers .buyer-item:nth-child(2) { animation-delay: 0.8s; }
+.top-buyers .buyer-item:nth-child(3) { animation-delay: 0.9s; }
+
+.buyer-item:hover {
+  transform: translateX(5px);
+}
+
+.buyer-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.buyer-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  font-weight: 500;
+  margin-right: 1rem;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.buyer-item:hover .buyer-avatar {
+  transform: scale(1.15) rotate(10deg);
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  border-radius: 4px;
+  width: 0;
+  animation: progressGrow 1.2s cubic-bezier(0.26, 0.86, 0.44, 0.985) forwards;
+  animation-delay: 1s;
+}
+
+/* Dark Mode Styles */
+.dark-mode {
+  background: linear-gradient(135deg, #0B2539 0%, #142b3f 100%);
+  color: #fff;
+}
+
+.dark-mode .stat-card,
+.dark-mode .chart-card {
+  background: #1c2b36;
+  border-color: #2e3f4c;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .invoice-table th,
+.dark-mode .invoice-table td {
+  border-color: #2e3f4c;
+}
+
+/* New Animation Keyframes */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardRotateIn {
+  from {
+    opacity: 0;
+    transform: rotateX(10deg) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0) translateY(0);
+  }
+}
+
+@keyframes tableRowFade {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes textGradient {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@keyframes progressGrow {
+  from { width: 0; }
+  to { width: var(--percentage, 100%); }
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-sidebar {
+    position: static;
+  }
+  
+  .stats-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stat-card {
+    transform: translateY(30px);
+    animation: staggeredCardEntrance 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px) scale(1.02);
+  }
+  
+  @keyframes staggeredCardEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .welcome-text {
+    font-size: 1.5rem;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .revenue-chart, 
+  .breakdown-chart,
+  .top-buyers,
+  .trend-chart {
+    grid-column: span 12;
+  }
+  
+  .chart-card {
+    padding: 1.25rem;
+  }
+}
+</style>
+
+
+
+
+Free Trade Zone 1 Deemed Supply 0 Margin Scheme 1 Summary Invoice 0 Continuous Supply 1 Disclosed Agent Billing 0 Supply through E-commerce 1 Exports 0

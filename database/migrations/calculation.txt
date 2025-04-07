@@ -1,0 +1,25 @@
+amount_due_for_payment
+Calculation:
+invoice_total_with_tax - paid_amount + rounding_amount
+
+tax_amount
+Calculation:
+taxable_amount * tax_category_rate / 100
+
+
+invoice_line_base_amount
+Calculation:
+invoiced_quantity * item_net_price (minus allowances, etc.)
+
+invoice_total_line_net_amount
+Calculation:
+Summation of the net amounts of all invoice lines.
+invoice_total_tax_amount
+Calculation:
+Summation of tax amounts from all tax breakdown entries related to the invoice.
+invoice_total_with_tax
+Calculation:
+invoice_total_line_net_amount + invoice_total_tax_amount
+invoice_due_for_payment
+Calculation:
+A calculated total due, likely involving the total with tax, payments received, and any other adjustments (such as rounding).
