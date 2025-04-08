@@ -49,6 +49,10 @@ class Invoice extends Model
         'deliver_to_location_identifier',
         'location_scheme_identifier',
         'actual_delivery_date',
+        'creditNoteRefInvoice',
+        'creditNoteRefInvoice_number',
+        'correction_method',
+        'reason_for_credit_note',
     ];
 
     public function seller()
@@ -140,6 +144,18 @@ class Invoice extends Model
             if (strlen($typeCode) === 8 && substr($typeCode, 6, 1) === '1') {
                 if (empty($invoice->deliver_to_address_line_1) || empty($invoice->deliver_to_country_code) || empty($invoice->deliver_to_country_subdivision)) {
                     throw new \Exception('The deliver_to_address_line_1, deliver_to_country_code, and deliver_to_country_subdivision fields are required when the delivery type is selected.');
+                }
+            }
+
+            if ($invoice->invoice_type_code == '381') {
+                if (empty($invoice->creditNoteRefInvoice)) {
+                    throw new \Exception('The creditNoteRefInvoice field is required for Credit Notes.');
+                }
+                if (empty($invoice->correction_method)) {
+                    throw new \Exception('The correction_method field is required for Credit Notes.');
+                }
+                if (empty($invoice->reason_for_credit_note)) {
+                    throw new \Exception('The reason_for_credit_note field is required for Credit Notes.');
                 }
             }
         });

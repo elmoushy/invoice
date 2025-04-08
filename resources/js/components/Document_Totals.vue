@@ -166,8 +166,6 @@
           />
         </div>
 
-        
-
         <!-- Invoiced Item Tax Rate (read-only) -->
         <div class="form-row">
           <label class="form-label">Invoiced Item Tax Rate</label>
@@ -189,8 +187,6 @@
             readonly
           />
         </div>
-
-
 
         <!-- Classification Scheme Identifier (Goods) -->
         <div class="form-row" v-if="line.item_type === 'Goods'">
@@ -245,12 +241,17 @@
               Collectors items and antiques (0% VAT)
             </option>
           </select>
-          <div v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'" class="reverse-charge-alert">
+          <div
+            v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'"
+            class="reverse-charge-alert"
+          >
             <i class="alert-icon">ℹ️</i>
-            <span>Reverse Charge Mechanism applied: VAT will not be collected by the seller. Buyer is responsible for VAT reporting</span>
+            <span
+              >Reverse Charge Mechanism applied: VAT will not be collected by
+              the seller. Buyer is responsible for VAT reporting</span
+            >
           </div>
         </div>
-
 
         <!-- Tax exemption reason text -->
         <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'zero_rated'">
@@ -268,16 +269,31 @@
           <label class="form-label">Tax Exemption Reason Code</label>
           <select class="form-select" v-model="line.tax_exemption_reason_code">
             <option value="" disabled>Select Exemption Reason</option>
-            <option value="ZRE">ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option>
-            <option value="ZRL">ZRL - Zero-Rated Local Supply (Education, healthcare, specific food items)</option>
-            <option value="EXE">EXE - Exempt Supply (Financial services, bare land sales, local passenger transport)</option>
-            <option value="RCM">RCM - Reverse Charge Mechanism (VAT paid by buyer)</option>
-            <option value="OSR">OSR - Out of Scope Revenue (Transactions outside VAT scope)</option>
+            <option value="ZRE"
+              >ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option
+            >
+            <option value="ZRL"
+              >ZRL - Zero-Rated Local Supply (Education, healthcare, specific
+              food items)</option
+            >
+            <option value="EXE"
+              >EXE - Exempt Supply (Financial services, bare land sales, local
+              passenger transport)</option
+            >
+            <option value="RCM"
+              >RCM - Reverse Charge Mechanism (VAT paid by buyer)</option
+            >
+            <option value="OSR"
+              >OSR - Out of Scope Revenue (Transactions outside VAT scope)</option
+            >
           </select>
         </div>
-        
-        <!-- Item Standard Identifier -->
-        <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'">
+
+        <!-- Item Standard Identifier (for Reverse_Charge) -->
+        <div
+          class="form-row"
+          v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'"
+        >
           <label class="form-label">Item Standard Identifier</label>
           <input
             type="text"
@@ -285,7 +301,8 @@
             v-model="line.Item_Standard_Identifier"
             placeholder="Item Standard Identifier"
             @input="
-              line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');"
+              line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');
+            "
           />
         </div>
 
@@ -540,14 +557,15 @@ export default {
       if (!invoiceData.value.invoice_lines) return
 
       invoiceData.value.invoice_lines.forEach((line, idx) => {
-        // Set invoice line identifier.
+        // 1) Set invoice line identifier
         line.invoice_line_identifier = String(idx + 1)
 
+        // 2) Gross & discount calculations
         const gross = parseFloat(line.item_gross_price) || 0
         let discountVal = parseFloat(line.discount_value) || 0
 
-        // If editing an existing invoice, clamp discount values.
         if (props.isEditMode) {
+          // If discount type is percentage, clamp between 0-100
           if (line.discount_type === 'percentage') {
             if (discountVal > 100) {
               discountVal = 100
@@ -557,6 +575,7 @@ export default {
               line.discount_value = '0'
             }
           }
+          // If discount type is static, clamp between 0 and gross
           if (line.discount_type === 'static') {
             if (discountVal > gross) {
               discountVal = gross
@@ -568,7 +587,6 @@ export default {
           }
         }
 
-        // Compute net price based on discount type.
         if (line.discount_type === 'percentage') {
           line.item_net_price = gross - (gross * discountVal / 100)
         } else if (line.discount_type === 'static') {
@@ -580,26 +598,29 @@ export default {
           line.item_net_price = 0
         }
 
+        // 3) Compute invoice_line_net_amount
         const baseQty = parseFloat(line.item_price_base_quantity) || 1
         const qty = parseFloat(line.invoiced_quantity) || 0
         line.invoice_line_net_amount = (line.item_net_price / baseQty) * qty
 
+        // 4) Compute VAT line amount if not reverse charge
         let rate = parseFloat(line.invoiced_item_tax_rate) || 0
         if (line.invoiced_item_tax_category_code === 'Reverse_Charge') {
           line.vat_line_amount = 0
         } else {
           line.vat_line_amount = (line.invoice_line_net_amount * rate) / 100
         }
+
+        // 5) **If invoice_type_code is 381 (Credit Note), negate amounts** 
+        // so that net/tax appear as negative values.
+        if (invoiceData.value.invoice_type_code === '381') {
+          line.invoice_line_net_amount = -Math.abs(line.invoice_line_net_amount)
+          line.vat_line_amount = -Math.abs(line.vat_line_amount)
+        }
       })
     })
 
     // Summaries
-    const invoice_total_line_net_amount = computed(() => {
-      return invoiceData.value.invoice_lines.reduce((sum, line) => {
-        return sum + (parseFloat(line.invoice_line_net_amount) || 0)
-      }, 0)
-    })
-
     const computedTaxBreakdownByCategory = computed(() => {
       const map = {}
       invoiceData.value.invoice_lines.forEach((line) => {
@@ -607,10 +628,11 @@ export default {
         const code = line.invoiced_item_tax_category_code
         const rate = parseFloat(line.invoiced_item_tax_rate) || 0
         const taxableAmount = parseFloat(line.invoice_line_net_amount) || 0
+
         let taxAmount = (taxableAmount * rate) / 100
 
         if (code === 'Reverse_Charge') {
-          taxAmount = 0 // No tax applied for Reverse Charge.
+          taxAmount = 0
         }
 
         if (!map[code]) {
@@ -618,20 +640,24 @@ export default {
             tax_category_code: code,
             tax_category_rate: rate,
             taxable_amount: 0,
-            tax_amount: 0,
+            tax_amount: 0
           }
         }
         map[code].taxable_amount += taxableAmount
         map[code].tax_amount += taxAmount
       })
-      return Object.values(map).map((item) => {
-        return {
-          tax_category_code: item.tax_category_code,
-          tax_category_rate: item.tax_category_rate,
-          taxable_amount: item.taxable_amount,
-          tax_amount: item.tax_amount,
-        }
-      })
+      return Object.values(map).map(item => ({
+        tax_category_code: item.tax_category_code,
+        tax_category_rate: item.tax_category_rate,
+        taxable_amount: item.taxable_amount,
+        tax_amount: item.tax_amount
+      }))
+    })
+
+    const invoice_total_line_net_amount = computed(() => {
+      return invoiceData.value.invoice_lines.reduce((sum, line) => {
+        return sum + (parseFloat(line.invoice_line_net_amount) || 0)
+      }, 0)
     })
 
     const invoice_total_tax_amount = computed(() => {
@@ -650,11 +676,13 @@ export default {
       return invoice_total_with_tax.value - paid + rounding
     })
 
-    // Computed property to determine if the third transaction type (index 2) is selected.
+    // Check if 3rd toggle (Margin Scheme) is selected
     const isMarginSchemeSelected = computed(() => {
-      return invoiceData.value.transactionTypes &&
-             invoiceData.value.transactionTypes[2] &&
-             invoiceData.value.transactionTypes[2].selected
+      return (
+        invoiceData.value.transactionTypes &&
+        invoiceData.value.transactionTypes[2] &&
+        invoiceData.value.transactionTypes[2].selected
+      )
     })
 
     return {
@@ -662,8 +690,8 @@ export default {
       units,
       addInvoiceLine,
       removeInvoiceLine,
-      invoice_total_line_net_amount,
       computedTaxBreakdownByCategory,
+      invoice_total_line_net_amount,
       invoice_total_tax_amount,
       invoice_total_with_tax,
       invoice_due_for_payment,
@@ -672,6 +700,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 /* Your original styles remain unchanged */

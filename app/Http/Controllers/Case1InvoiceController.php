@@ -195,7 +195,12 @@ class Case1InvoiceController extends Controller
                 'deliver_to_location_identifier' => 'nullable|string|max:255',
                 'location_scheme_identifier' => 'nullable|string|max:50',
                 'actual_delivery_date' => 'nullable|date',
+                'creditNoteRefInvoice' => 'nullable|numeric',
+                'creditNoteRefInvoice_number' => 'nullable|string',
+                'correction_method' => 'nullable|string',
+                'reason_for_credit_note' => 'nullable|string',
 
+                
                 // -----------------------------------------
                 // Invoice lines
                 // -----------------------------------------
@@ -211,7 +216,7 @@ class Case1InvoiceController extends Controller
                 'invoice_lines.*.item_price_base_quantity' => 'required|numeric|min:1',
                 'invoice_lines.*.invoiced_item_tax_rate' => 'nullable|numeric',
                 'invoice_lines.*.item_name' => 'required|string|max:255',
-                'invoice_lines.*.vat_line_amount' => 'required|numeric|min:0',
+                'invoice_lines.*.vat_line_amount' => 'required|numeric',
                 'invoice_lines.*.item_type' => 'nullable|string|max:50',
 
                 'invoice_lines.*.classification_scheme_identifier' => 'nullable|string||max:10',
@@ -235,8 +240,8 @@ class Case1InvoiceController extends Controller
                 'tax_breakdowns' => 'required|array|min:1',
                 'tax_breakdowns.*.tax_category_code' => 'required|string|max:50',
                 'tax_breakdowns.*.tax_category_rate' => 'nullable|numeric',
-                'tax_breakdowns.*.taxable_amount' => 'required|numeric|min:0',
-                'tax_breakdowns.*.tax_amount' => 'required|numeric|min:0',
+                'tax_breakdowns.*.taxable_amount' => 'required|numeric',
+                'tax_breakdowns.*.tax_amount' => 'required|numeric',
 
                 // -----------------------------------------
                 // Payment Details
