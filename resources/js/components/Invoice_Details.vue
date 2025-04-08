@@ -39,7 +39,6 @@
                   class="form-control"
                 />
               </div>
-
               <div class="form-row">
                 <label class="form-label">Invoice Type Code</label>
                 <select
@@ -53,11 +52,30 @@
                   <option value="384">384 - Corrected Invoice</option>
                   <option value="386">386 - Prepayment Invoice</option>
                   <option value="396">396 - Factored Invoice</option>
-                  <option value="Out of scope of tax">Out of scope of tax </option>
+                  <option value="Out of scope of tax">Out of scope of tax</option>
                 </select>
               </div>
             </div>
-            
+
+            <!-- Show "Last Invoices" dropdown if type code === 381 (Credit Note) -->
+            <div v-if="invoiceData.invoice_type_code === '381'">
+              <label class="form-label">Select Last Invoice to Credit</label>
+              <select
+                class="form-select"
+                v-model="selectedCreditNoteRefInvoice"
+                @change="onSelectCreditNoteRefInvoice"
+              >
+                <option value="" disabled>Select Invoice</option>
+                <option
+                  v-for="item in lastInvoices"
+                  :key="item.invoice_id"
+                  :value="item.invoice_id"
+                >
+                  {{ item.invoice_number }} (ID: {{ item.invoice_id }})
+                </option>
+              </select>
+            </div>
+
             <!-- Row 2: Currency fields side by side -->
             <div class="form-row-group">
               <div class="form-row">
@@ -73,9 +91,14 @@
                   </option>
                 </select>
               </div>
-              
               <transition name="slide-fade">
-                <div class="form-row" v-if="invoiceData.invoice_currency_code && invoiceData.invoice_currency_code !== 'AED'">
+                <div
+                  class="form-row"
+                  v-if="
+                    invoiceData.invoice_currency_code &&
+                    invoiceData.invoice_currency_code !== 'AED'
+                  "
+                >
                   <label class="form-label">Tax accounting currency</label>
                   <div class="readonly-field">
                     <input
@@ -87,28 +110,38 @@
                     />
                     <span class="readonly-badge">Required by law</span>
                   </div>
-                  <input type="hidden" v-model="invoiceData.payment_currency_code">
+                  <input type="hidden" v-model="invoiceData.payment_currency_code" />
                 </div>
               </transition>
             </div>
 
             <!-- Currency Exchange Rate -->
             <transition name="slide-fade">
-              <div class="form-row-group" v-if="invoiceData.invoice_currency_code && invoiceData.invoice_currency_code !== 'AED'">
+              <div
+                class="form-row-group"
+                v-if="
+                  invoiceData.invoice_currency_code &&
+                  invoiceData.invoice_currency_code !== 'AED'
+                "
+              >
                 <div class="form-row full-width">
                   <label class="form-label">Currency Exchange Rate</label>
                   <div class="exchange-rate-info">
                     <span class="exchange-rate-formula">
-                      3.6 {{ invoiceData.exchange_rate }} AED = 1 {{ invoiceData.invoice_currency_code }}
+                      3.6 {{ invoiceData.exchange_rate }} AED =
+                      1 {{ invoiceData.invoice_currency_code }}
                     </span>
-                    <span class="exchange-rate-badge" :class="{'is-loading': isLoadingRate}">
+                    <span
+                      class="exchange-rate-badge"
+                      :class="{'is-loading': isLoadingRate}"
+                    >
                       {{ isLoadingRate ? 'Updating...' : (' Last updated: ' + lastUpdated) }}
                     </span>
                   </div>
                 </div>
               </div>
             </transition>
-            
+
             <!-- Row 3: Specification + Business Process -->
             <div class="form-row-group">
               <div class="form-row">
@@ -143,108 +176,108 @@
               </div>
             </div>
 
-              <!-- Summary Invoice date range fields -->
-              <transition name="slide-fade">
-                <div class="form-row-group" v-if="transactionTypes[3].selected">
-                  <div class="form-row">
-                    <label class="form-label">Summary Invoice Start Date</label>
-                    <input
-                      type="date"
-                      v-model="invoiceData.summary_invoice_start_date"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="form-row">
-                    <label class="form-label">Summary Invoice End Date</label>
-                    <input
-                      type="date"
-                      v-model="invoiceData.summary_invoice_end_date"
-                      class="form-control"
-                    />
-                  </div>
+            <!-- Summary Invoice date range fields -->
+            <transition name="slide-fade">
+              <div class="form-row-group" v-if="transactionTypes[3].selected">
+                <div class="form-row">
+                  <label class="form-label">Summary Invoice Start Date</label>
+                  <input
+                    type="date"
+                    v-model="invoiceData.summary_invoice_start_date"
+                    class="form-control"
+                  />
                 </div>
-              </transition>
-              <!-- Continuous Supply Fields -->
-              <transition name="slide-fade">
-                <div class="form-row-group" v-if="transactionTypes[4].selected">
-                  <div class="form-row">
-                    <label class="form-label">Contract Reference</label>
-                    <input
-                      type="text"
-                      v-model="invoiceData.contract_reference"
-                      class="form-control"
-                      placeholder="Optional"
-                    />
-                    <small class="form-text">Optional field if needed</small>
-                  </div>
-                  <div class="form-row">
-                    <label class="form-label">Contract Value</label>
-                    <input
-                      type="number"
-                      v-model="invoiceData.contract_value"
-                      class="form-control"
-                      placeholder="Optional"
-                      step="0.01"
-                    />
-                    <small class="form-text">Optional field if needed</small>
-                  </div>
+                <div class="form-row">
+                  <label class="form-label">Summary Invoice End Date</label>
+                  <input
+                    type="date"
+                    v-model="invoiceData.summary_invoice_end_date"
+                    class="form-control"
+                  />
                 </div>
-              </transition>
+              </div>
+            </transition>
 
-              <transition name="slide-fade">
-                <div class="form-row-group" v-if="transactionTypes[4].selected">
-                  <div class="form-row">
-                    <label class="form-label">Frequency of Billing</label>
-                    <select
-                      v-model="invoiceData.billing_frequency"
-                      class="form-select"
-                    >
-                      <option value="" disabled>Select Frequency</option>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="others">Others</option>
-                    </select>
-                  </div>
-                  <div class="form-row">
-                    <label class="form-label">
-                      Invoice Note
-                      <span v-if="invoiceData.billing_frequency === 'others'" class="required-marker">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      v-model="invoiceData.invoice_note"
-                      class="form-control"
-                      :placeholder="invoiceData.billing_frequency === 'others' ? 'Required' : 'Optional'"
-                      :required="invoiceData.billing_frequency === 'others'"
-                    />
-                    <small class="form-text" :class="{'text-required': invoiceData.billing_frequency === 'others'}">
-                      {{ invoiceData.billing_frequency === 'others' ? 'Required field' : 'Optional field' }}
-                    </small>
-                  </div>
+            <!-- Continuous Supply Fields -->
+            <transition name="slide-fade">
+              <div class="form-row-group" v-if="transactionTypes[4].selected">
+                <div class="form-row">
+                  <label class="form-label">Contract Reference</label>
+                  <input
+                    type="text"
+                    v-model="invoiceData.contract_reference"
+                    class="form-control"
+                    placeholder="Optional"
+                  />
+                  <small class="form-text">Optional field if needed</small>
                 </div>
-              </transition>
-              <!-- Free Trade Zone Fields -->
-              <transition name="slide-fade">
-                <div class="form-row-group" v-if="transactionTypes[0].selected">
-                  <div class="form-row full-width">
-                    <label class="form-label">
-                      Beneficiary ID <span class="required-marker">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      v-model="invoiceData.beneficiary_id"
-                      class="form-control"
-                      placeholder="Enter Beneficiary ID"
-                      required
-                    />
-                    <small class="form-text text-required">Required for Free Trade Zone transactions</small>
-                  </div>
+                <div class="form-row">
+                  <label class="form-label">Contract Value</label>
+                  <input
+                    type="number"
+                    v-model="invoiceData.contract_value"
+                    class="form-control"
+                    placeholder="Optional"
+                    step="0.01"
+                  />
+                  <small class="form-text">Optional field if needed</small>
                 </div>
-              </transition>
+              </div>
+            </transition>
 
+            <transition name="slide-fade">
+              <div class="form-row-group" v-if="transactionTypes[4].selected">
+                <div class="form-row">
+                  <label class="form-label">Frequency of Billing</label>
+                  <select
+                    v-model="invoiceData.billing_frequency"
+                    class="form-select"
+                  >
+                    <option value="" disabled>Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="others">Others</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">
+                    Invoice Note
+                    <span v-if="invoiceData.billing_frequency === 'others'" class="required-marker">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    v-model="invoiceData.invoice_note"
+                    class="form-control"
+                    :placeholder="invoiceData.billing_frequency === 'others' ? 'Required' : 'Optional'"
+                    :required="invoiceData.billing_frequency === 'others'"
+                  />
+                  <small class="form-text" :class="{'text-required': invoiceData.billing_frequency === 'others'}">
+                    {{ invoiceData.billing_frequency === 'others' ? 'Required field' : 'Optional field' }}
+                  </small>
+                </div>
+              </div>
+            </transition>
 
+            <!-- Free Trade Zone Fields -->
+            <transition name="slide-fade">
+              <div class="form-row-group" v-if="transactionTypes[0].selected">
+                <div class="form-row full-width">
+                  <label class="form-label">
+                    Beneficiary ID <span class="required-marker">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    v-model="invoiceData.beneficiary_id"
+                    class="form-control"
+                    placeholder="Enter Beneficiary ID"
+                    required
+                  />
+                  <small class="form-text text-required">Required for Free Trade Zone transactions</small>
+                </div>
+              </div>
+            </transition>
           </div>
         </form>
       </div>
@@ -256,37 +289,32 @@
             <!-- Row 1 -->
             <div class="form-row-group">
               <div class="form-row">
-              <label class="form-label">Deliver to address line 1</label>
-              <input type="text" v-model="invoiceData.deliver_to_address_line_1" class="form-control" />
-              <div class="address-toggle" @click="showAddressLine2 = !showAddressLine2">
-                <span class="toggle-icon">{{ showAddressLine2 ? '−' : '+' }}</span>
-                <span class="toggle-text">{{ showAddressLine2 ? 'Hide additional address lines' : 'Add more address details' }}</span>
-              </div>
+                <label class="form-label">Deliver to address line 1</label>
+                <input type="text" v-model="invoiceData.deliver_to_address_line_1" class="form-control" />
+                <div class="address-toggle" @click="showAddressLine2 = !showAddressLine2">
+                  <span class="toggle-icon">{{ showAddressLine2 ? '−' : '+' }}</span>
+                  <span class="toggle-text">
+                    {{ showAddressLine2 ? 'Hide additional address lines' : 'Add more address details' }}
+                  </span>
+                </div>
               </div>
               <div class="form-row" v-show="showAddressLine2">
-              <label class="form-label">Deliver to address line 2</label>
-              <input type="text" v-model="invoiceData.deliver_to_address_line_2" class="form-control" />
+                <label class="form-label">Deliver to address line 2</label>
+                <input type="text" v-model="invoiceData.deliver_to_address_line_2" class="form-control" />
               </div>
             </div>
 
             <!-- Row 2 -->
             <div class="form-row-group" v-show="showAddressLine2">
               <div class="form-row">
-              <label class="form-label">Deliver to address line 3</label>
-              <input type="text" v-model="invoiceData.deliver_to_address_line_3" class="form-control" />
+                <label class="form-label">Deliver to address line 3</label>
+                <input type="text" v-model="invoiceData.deliver_to_address_line_3" class="form-control" />
               </div>
               <div class="form-row">
                 <label class="form-label">Deliver to country code</label>
-                <select
-                  v-model="invoiceData.deliver_to_country_code"
-                  class="form-select"
-                >
+                <select v-model="invoiceData.deliver_to_country_code" class="form-select">
                   <option value="" disabled>Select Country</option>
-                  <option
-                    v-for="country in countries"
-                    :key="country.code"
-                    :value="country.code"
-                  >
+                  <option v-for="country in countries" :key="country.code" :value="country.code">
                     {{ country.code }} - {{ country.name }}
                   </option>
                 </select>
@@ -297,23 +325,14 @@
             <div class="form-row-group" v-show="!showAddressLine2">
               <div class="form-row full-width">
                 <label class="form-label">Deliver to country code</label>
-                <select
-                  v-model="invoiceData.deliver_to_country_code"
-                  class="form-select"
-                >
+                <select v-model="invoiceData.deliver_to_country_code" class="form-select">
                   <option value="" disabled>Select Country</option>
-                  <option
-                    v-for="country in countries"
-                    :key="country.code"
-                    :value="country.code"
-                  >
+                  <option v-for="country in countries" :key="country.code" :value="country.code">
                     {{ country.code }} - {{ country.name }}
                   </option>
                 </select>
               </div>
             </div>
-
-      
 
             <!-- Row 3 -->
             <div class="form-row-group">
@@ -321,21 +340,15 @@
                 <label class="form-label">Deliver to country subdivision</label>
                 <select v-model="invoiceData.deliver_to_country_subdivision" class="form-select">
                   <option value="" disabled>Select Subdivision</option>
-                  <option
-                    v-for="region in selectedSubdivisions"
-                    :key="region.code"
-                    :value="region.code"
-                  >
+                  <option v-for="region in selectedSubdivisions" :key="region.code" :value="region.code">
                     {{ region.code }} - {{ region.name }}
                   </option>
                 </select>
               </div>
               <div class="form-row">
-              <label class="form-label">Deliver to post code</label>
-              <input type="text" v-model="invoiceData.deliver_to_post_code" class="form-control" />
+                <label class="form-label">Deliver to post code</label>
+                <input type="text" v-model="invoiceData.deliver_to_post_code" class="form-control" />
               </div>
-
-
             </div>
 
             <!-- Row 4 -->
@@ -349,7 +362,6 @@
                 <input type="text" v-model="invoiceData.deliver_to_party_name" class="form-control" />
               </div>
             </div>
-
 
             <!-- Row 6 -->
             <div class="form-row-group">
@@ -366,163 +378,11 @@
   </div>
 </template>
 
-<!-- <script>
-import { ref, onMounted, computed } from 'vue'
-import { useInvoiceStore } from '../invoice'
-import { storeToRefs } from 'pinia'
-import axios from 'axios'
-
-// Import all subdivisions
-import {
-  emirates,
-  saudiRegions,
-  usStates,
-  ukSubdivisions,
-  franceRegions,
-  germanStates,
-  indianSubdivisions,
-  chinaSubdivisions,
-  japanPrefectures,
-  countries
-} from './subdivisions.js'
-
-export default {
-  name: 'InvoiceDetails',
-  data() {
-    return {
-      isEditMode: false,
-      currentInvoiceId: null,
-      transactionTypes: [
-        { label: 'Free Trade Zone', selected: false },
-        { label: 'Deemed Supply', selected: false },
-        { label: 'Margin Scheme', selected: false },
-        { label: 'Summary Invoice', selected: false },
-        { label: 'Continuous Supply', selected: false },
-        { label: 'Disclosed Agent Billing', selected: false },
-        { label: 'Supply through E-commerce', selected: false },
-        { label: 'Exports', selected: false }
-      ],
-      showAddressLine2: false,
-      showAddressLine3: false
-    }
-  },
-  setup() {
-    const invoiceStore = useInvoiceStore()
-    const { invoiceData } = storeToRefs(invoiceStore)
-
-    const isLoadingRate = ref(false)
-    const lastUpdated = ref('')
-    const currencies = ['AED', 'USD', 'EUR']
-
-    const fetchExchangeRate = async () => {
-      if (!invoiceData.value.invoice_currency_code) return
-      try {
-        isLoadingRate.value = true
-        const response = await axios.get(`/api/exchange-rate`, {
-          params: { currency: invoiceData.value.invoice_currency_code }
-        })
-        invoiceStore.invoiceData.exchange_rate = response.data.rate
-        lastUpdated.value = new Date().toLocaleDateString()
-      } catch (error) {
-        console.error('Error fetching exchange rate:', error)
-      } finally {
-        isLoadingRate.value = false
-      }
-    }
-
-    const selectedSubdivisions = computed(() => {
-      switch (invoiceData.value.deliver_to_country_code) {
-        case 'AE': return emirates
-        case 'SA': return saudiRegions
-        case 'US': return usStates
-        case 'GB': return ukSubdivisions
-        case 'FR': return franceRegions
-        case 'DE': return germanStates
-        case 'IN': return indianSubdivisions
-        case 'CN': return chinaSubdivisions
-        case 'JP': return japanPrefectures
-        default: return []
-      }
-    })
-
-    return {
-      invoiceStore,
-      invoiceData,
-      currencies,
-      countries,
-      selectedSubdivisions,
-      isLoadingRate,
-      lastUpdated,
-      fetchExchangeRate
-    }
-  },
-  created() {
-    this.currentInvoiceId = this.$route.params.id || null
-    this.isEditMode = !!this.currentInvoiceId
-
-    if (!this.invoiceData.specification_identifier) {
-      this.invoiceData.specification_identifier = "urn:peppol:printbilling-1@ae-1"
-    }
-
-    // You can load invoice by ID here if needed.
-    // this.loadInvoiceForEdit(this.currentInvoiceId)
-  },
-  mounted() {
-    this.loadSelectedTransactionTypes()
-  },
-  methods: {
-    async loadInvoiceForEdit(id) {
-      try {
-        const resp = await axios.get(`/api/invoice/${id}`)
-        this.$patchInvoiceData(resp.data.data)
-      } catch (err) {
-        console.error('Error loading invoice:', err)
-      }
-    },
-    $patchInvoiceData(newData) {
-      this.invoiceStore.invoiceData = newData
-      this.loadSelectedTransactionTypes()
-      if (!this.invoiceData.specification_identifier) {
-        this.invoiceData.specification_identifier = "urn:peppol:printbilling-1@ae-1"
-      }
-    },
-    updateBusinessProcessType() {
-      switch (this.invoiceData.invoice_type_code) {
-        case "380": this.invoiceData.business_process_type = "urn:peppol:bis:billing-1"; break
-        case "381": this.invoiceData.business_process_type = "urn:peppol:bis:creditnote-1"; break
-        case "384": this.invoiceData.business_process_type = "urn:peppol:bis:correctedinvoice-1"; break
-        case "386": this.invoiceData.business_process_type = "urn:peppol:bis:prepaymentinvoice-1"; break
-        case "396": this.invoiceData.business_process_type = "urn:peppol:bis:factoredinvoice-1"; break
-        default: this.invoiceData.business_process_type = ""
-      }
-    },
-    updateInvoiceTransactionTypeCode() {
-      const code = this.transactionTypes
-        .map(option => option.selected ? '1' : '0')
-        .join('')
-      this.invoiceData.invoice_transaction_type_code = code
-      this.invoiceStore.invoiceData.transactionTypes = JSON.parse(JSON.stringify(this.transactionTypes))
-    },
-    loadSelectedTransactionTypes() {
-      const { invoice_transaction_type_code } = this.invoiceData
-      if (!invoice_transaction_type_code || invoice_transaction_type_code.length !== 8) {
-        this.transactionTypes.forEach(opt => { opt.selected = false })
-        return
-      }
-      for (let i = 0; i < 8; i++) {
-        this.transactionTypes[i].selected = invoice_transaction_type_code[i] === '1'
-      }
-    }
-  }
-}
-</script> -->
-
-
 <script>
-import { ref, computed } from 'vue'
-import { useInvoiceStore } from '../invoice'
+import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
+import { useInvoiceStore } from '../invoice'
 import {
   emirates,
   saudiRegions,
@@ -542,6 +402,7 @@ export default {
     return {
       isEditMode: false,
       currentInvoiceId: null,
+      // Local transaction type toggles
       transactionTypes: [
         { label: 'Free Trade Zone', selected: false },
         { label: 'Deemed Supply', selected: false },
@@ -556,28 +417,123 @@ export default {
       showAddressLine3: false
     }
   },
+  watch: {
+    // Newly added watcher to update transactionTypes whenever the invoice transaction type code changes
+    'invoiceData.invoice_transaction_type_code': {
+      immediate: true,
+      handler(newCode) {
+        this.loadSelectedTransactionTypes();
+      }
+    }
+  },
   setup() {
     const invoiceStore = useInvoiceStore()
     const { invoiceData } = storeToRefs(invoiceStore)
-
+    // For currency exchange rate loading status
     const isLoadingRate = ref(false)
     const lastUpdated = ref('')
     const currencies = ['AED', 'USD', 'EUR']
 
-    // Computed property to check if the invoice type is restricted
+    // -------------------------------------------------
+    //  "Last Invoices" logic for Credit Note (381)
+    // -------------------------------------------------
+    const lastInvoices = ref([])
+    const selectedCreditNoteRefInvoice = ref('')
+
+    // Fetch list of "last invoices" from the backend
+    const fetchLastInvoices = async () => {
+      try {
+        const response = await axios.get('/api/listinvoice/cases')
+        lastInvoices.value = response.data?.data || []
+      } catch (err) {
+        console.error('Error fetching last invoices:', err)
+      }
+    }
+
+    // When a user selects an invoice reference, fetch its details and patch the current invoice
+    const onSelectCreditNoteRefInvoice = async () => {
+      if (!selectedCreditNoteRefInvoice.value) return
+      try {
+        const response = await axios.get(`/api/invoice/${selectedCreditNoteRefInvoice.value}`)
+        const oldInvoiceData = response.data?.data
+        console.log('Patching invoice data from existing invoice:', oldInvoiceData)
+        if (oldInvoiceData) {
+          patchInvoiceDataFromExisting(oldInvoiceData)
+        }
+      } catch (err) {
+        console.error('Error loading referenced invoice:', err)
+      }
+    }
+
+    // Patch old invoice data (excluding certain keys) into the shared invoice data
+    const patchInvoiceDataFromExisting = (oldData) => {
+      // Exclude invoice_type_code, lines, payments, buyer, and seller from merge
+      const { invoice_type_code, lines, payments, buyer, seller, ...rest } = oldData
+      // Merge the remaining fields into invoiceData
+      invoiceData.value = { ...invoiceData.value, ...rest }
+      // Map backend keys to our store keys
+      invoiceData.value.invoice_lines = lines || []
+      invoiceData.value.payment_details = payments || []
+      // If buyer_id is missing, try to set it from the nested buyer object
+      if (!invoiceData.value.buyer_id && buyer && buyer.buyer_id) {
+        invoiceData.value.buyer_id = buyer.buyer_id
+      }
+      // Likewise for seller_id
+      if (!invoiceData.value.seller_id && seller && seller.seller_id) {
+        invoiceData.value.seller_id = seller.seller_id
+      }
+      if (payments && payments.length > 0) {
+        const firstPayment = payments[0];
+        let typeCode = firstPayment.payment_means_type_code;
+        // Map 'cash' to '97' if applicable.
+        if (typeCode === 'cash') {
+          typeCode = '97';
+        }
+        invoiceData.value.payment_means_type_code = typeCode || '';
+        invoiceData.value.payment_date = firstPayment.payment_date || '';
+        invoiceData.value.payment_account_identifier = firstPayment.payment_account_identifier || '';
+        invoiceData.value.payment_account_name = firstPayment.payment_account_name || '';
+        invoiceData.value.paid_amount = firstPayment.paid_amount || '';
+        invoiceData.value.rounding_amount = firstPayment.rounding_amount || '';
+        invoiceData.value.payment_card_primary_account_number = firstPayment.payment_card_primary_account_number || '';
+        invoiceData.value.expiry_date = firstPayment.expiry_date || '';
+        invoiceData.value.cvv = '';
+    }
+      // Force business process type to be Credit Note
+      invoiceData.value.business_process_type = 'urn:peppol:bis:creditnote-1'
+    }
+
+    // Watch changes in invoice_type_code to fetch last invoices if credit note
+    watch(
+      () => invoiceData.value.invoice_type_code,
+      (newVal) => {
+        if (newVal === '381') {
+          fetchLastInvoices()
+        } else {
+          lastInvoices.value = []
+          selectedCreditNoteRefInvoice.value = ''
+        }
+      }
+    )
+    // -----------------------------------------------
+
+    // Determine if the invoice type is restricted (for disabling certain toggles)
     const isRestrictedInvoiceType = computed(() => {
-      return invoiceData.value.invoice_type_code === "381" ||
-             invoiceData.value.invoice_type_code === "Out of scope of tax"
+      return (
+        invoiceData.value.invoice_type_code === '381' ||
+        invoiceData.value.invoice_type_code === 'Out of scope of tax'
+      )
     })
 
-    // List of transaction types that should be disabled when restricted
+    // Disabled transaction types for restricted invoice types
     const restrictedTransactionTypes = ['Deemed Supply', 'Margin Scheme', 'Summary Invoice']
 
+    // Fetch exchange rate based on invoice currency code
     const fetchExchangeRate = async () => {
       if (!invoiceData.value.invoice_currency_code) return
       try {
         isLoadingRate.value = true
-        const response = await axios.get(`/api/exchange-rate`, {
+        const response = await axios.get('/api/exchange-rate', {
           params: { currency: invoiceData.value.invoice_currency_code }
         })
         invoiceStore.invoiceData.exchange_rate = response.data.rate
@@ -589,6 +545,7 @@ export default {
       }
     }
 
+    // Compute country subdivisions based on the delivery country code
     const selectedSubdivisions = computed(() => {
       switch (invoiceData.value.deliver_to_country_code) {
         case 'AE': return emirates
@@ -614,15 +571,18 @@ export default {
       fetchExchangeRate,
       selectedSubdivisions,
       isRestrictedInvoiceType,
-      restrictedTransactionTypes
+      restrictedTransactionTypes,
+      // Credit note references
+      lastInvoices,
+      selectedCreditNoteRefInvoice,
+      onSelectCreditNoteRefInvoice
     }
   },
   created() {
     this.currentInvoiceId = this.$route.params.id || null
     this.isEditMode = !!this.currentInvoiceId
-
     if (!this.invoiceData.specification_identifier) {
-      this.invoiceData.specification_identifier = "urn:peppol:printbilling-1@ae-1"
+      this.invoiceData.specification_identifier = 'urn:peppol:printbilling-1@ae-1'
     }
   },
   mounted() {
@@ -641,33 +601,34 @@ export default {
       this.invoiceStore.invoiceData = newData
       this.loadSelectedTransactionTypes()
       if (!this.invoiceData.specification_identifier) {
-        this.invoiceData.specification_identifier = "urn:peppol:printbilling-1@ae-1"
+        this.invoiceData.specification_identifier = 'urn:peppol:printbilling-1@ae-1'
       }
     },
+    // Set business_process_type based on the selected invoice type code
     updateBusinessProcessType() {
       switch (this.invoiceData.invoice_type_code) {
-        case "380":
-          this.invoiceData.business_process_type = "urn:peppol:bis:billing-1"
+        case '380':
+          this.invoiceData.business_process_type = 'urn:peppol:bis:billing-1'
           break
-        case "381":
-          this.invoiceData.business_process_type = "urn:peppol:bis:creditnote-1"
+        case '381':
+          this.invoiceData.business_process_type = 'urn:peppol:bis:creditnote-1'
           break
-        case "384":
-          this.invoiceData.business_process_type = "urn:peppol:bis:correctedinvoice-1"
+        case '384':
+          this.invoiceData.business_process_type = 'urn:peppol:bis:correctedinvoice-1'
           break
-        case "386":
-          this.invoiceData.business_process_type = "urn:peppol:bis:prepaymentinvoice-1"
+        case '386':
+          this.invoiceData.business_process_type = 'urn:peppol:bis:prepaymentinvoice-1'
           break
-        case "396":
-          this.invoiceData.business_process_type = "urn:peppol:bis:factoredinvoice-1"
+        case '396':
+          this.invoiceData.business_process_type = 'urn:peppol:bis:factoredinvoice-1'
           break
         default:
-          this.invoiceData.business_process_type = ""
+          this.invoiceData.business_process_type = ''
       }
-
-      // If the invoice type is restricted, unselect the disallowed transaction types
-      if (this.invoiceData.invoice_type_code === "381" ||
-          this.invoiceData.invoice_type_code === "Out of scope of tax") {
+      if (
+        this.invoiceData.invoice_type_code === '381' ||
+        this.invoiceData.invoice_type_code === 'Out of scope of tax'
+      ) {
         this.transactionTypes.forEach((option) => {
           if (['Deemed Supply', 'Margin Scheme', 'Summary Invoice'].includes(option.label)) {
             option.selected = false
@@ -676,17 +637,17 @@ export default {
         this.updateInvoiceTransactionTypeCode()
       }
     },
+    // Convert local transactionTypes array into a string code (e.g., "10100000")
     updateInvoiceTransactionTypeCode() {
-      const code = this.transactionTypes
-        .map(option => option.selected ? '1' : '0')
-        .join('')
+      const code = this.transactionTypes.map((option) => (option.selected ? '1' : '0')).join('')
       this.invoiceData.invoice_transaction_type_code = code
       this.invoiceStore.invoiceData.transactionTypes = JSON.parse(JSON.stringify(this.transactionTypes))
     },
+    // Load selected transaction types from the store's invoice_transaction_type_code
     loadSelectedTransactionTypes() {
       const { invoice_transaction_type_code } = this.invoiceData
       if (!invoice_transaction_type_code || invoice_transaction_type_code.length !== 8) {
-        this.transactionTypes.forEach(opt => { opt.selected = false })
+        this.transactionTypes.forEach((opt) => { opt.selected = false })
         return
       }
       for (let i = 0; i < 8; i++) {

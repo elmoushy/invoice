@@ -17,14 +17,6 @@
           <div class="action-bar">
             <div class="dropdown-container">
               <div class="select-wrapper">
-                <!--
-                  <select v-model="selectedCase" @change="handleCaseChange" class="modern-select">
-                    <option v-for="n in 15" :key="n" :value="n">Case {{ n }}</option>
-                  </select>
-                  <div class="select-arrow">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                -->
               </div>
             </div>
             <div class="action-buttons">

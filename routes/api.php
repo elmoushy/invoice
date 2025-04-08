@@ -30,5 +30,6 @@ Route::get('/sellers', [SellerController::class, 'index']);
 // Invoice routes
 Route::post('/invoice', [Case1InvoiceController::class, 'store']);
 Route::get('/invoice_case1_index', [Case1InvoiceController::class, 'index']);
+Route::get('/listinvoice/cases', [Case1InvoiceController::class, 'index2']);
 Route::get('/invoice/{id}', [Case1InvoiceController::class, 'show']);
 Route::put('/invoice/{id}', [Case1InvoiceController::class, 'update']);

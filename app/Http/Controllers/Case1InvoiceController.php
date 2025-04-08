@@ -47,145 +47,30 @@ class Case1InvoiceController extends Controller
         return response()->json(['status' => 200, 'data' => $invoices]);
     }
 
-    // public function store(Request $request)
-    // {
-    //     $invoice = DB::transaction(function () use ($request) {
-    //         // 1. VALIDATE
-    //         $validatedData = $request->validate([
-    //             // Invoice main fields
-    //             'invoice_issue_date' => 'required|date',
-    //             'invoice_type_code' => 'nullable|string',
-    //             'invoice_currency_code' => 'nullable|string|size:3',
-    //             'payment_currency_code' => 'nullable|string|size:3',
-    //             'tax_registration_identifier' => 'nullable|string',
-    //             'invoice_transaction_type_code' => 'required|string',
-    //             'invoice_total_line_net_amount' => 'nullable|max:50',
-    //             'invoice_total_tax_amount' => 'nullable|max:50',
-    //             'invoice_total_with_tax' => 'nullable|max:50',
-    //             'invoice_due_for_payment' => 'nullable|max:50',
+    public function index2(Request $request)
+    {
+        $query = Invoice::query();
 
-    //             'payment_due_date' => 'nullable|date',
-    //             'business_process_type' => 'required|string',
-    //             'specification_identifier' => 'required|string',
-    //             'currency_exchange_rate' => 'nullable|numeric',
-    //             'invoice_total_tax_amount_acc_currency' => 'nullable|numeric',
-    //             'seller_id' => 'required|exists:sellers,seller_id',
-    //             'buyer_id' => 'required|exists:buyers,buyer_id',
-    
-    //             // Invoice lines
-    //             'invoice_lines' => 'required|array|min:1',
-    //             'invoice_lines.*.invoice_line_identifier' => 'required|string|max:50',
-    //             'invoice_lines.*.invoiced_quantity' => 'required|numeric|min:0',
-    //             'invoice_lines.*.invoiced_quantity_unit_code' => 'required|string|max:10',
-    //             'invoice_lines.*.item_net_price' => 'required|numeric|min:0',
-    //             'invoice_lines.*.item_gross_price' => 'required|numeric|min:0',
-    //             'invoice_lines.*.item_description' => 'required|string',
-    //             'invoice_lines.*.item_classification' => 'nullable|string|max:255',
-    //             'invoice_lines.*.invoice_line_net_amount' => 'required|numeric',
-    //             'invoice_lines.*.item_price_base_quantity' => 'required|numeric|min:1',
-    //             'invoice_lines.*.invoiced_item_tax_rate' => 'nullable|numeric',
-    //             'invoice_lines.*.item_name' => 'required|string|max:255',
-    //             'invoice_lines.*.vat_line_amount' => 'required|numeric|min:0',
-    //             'invoice_lines.*.item_type' => 'nullable|string|max:50',
-    //             'invoice_lines.*.classification_scheme_identifier' => 'nullable|string|max:10',
-    //             'invoice_lines.*.sac_scheme_identifier' => 'nullable|string|max:10',
-    //             'invoice_lines.*.discount_type' => 'nullable|string|max:50',
-    //             'invoice_lines.*.discount_value' => 'nullable|numeric|min:0',
-    //             'invoice_lines.*.invoiced_item_tax_category_code' => 'nullable|string|max:50',
-    //             'invoice_lines.*.tax_exemption_reason' => 'nullable|string|max:255',
-    //             'invoice_lines.*.tax_exemption_reason_code' => 'nullable|string|max:255',
-    //             'invoice_lines.*.scheme_idenifier_IBT_157_1' => 'nullable|string|max:255',
-    //             'invoice_lines.*.Item_Standard_Identifier' => [
-    //                 'nullable',
-    //                 'regex:/^(?:\d{8}|\d{12}|\d{13}|\d{14})$/'
-    //             ],
-    
-    //             // Tax Breakdowns
-    //             'tax_breakdowns' => 'required|array|min:1',
-    //             'tax_breakdowns.*.tax_category_code' => 'required|string|max:50',
-    //             'tax_breakdowns.*.tax_category_rate' => 'nullable|numeric',
-    //             'tax_breakdowns.*.taxable_amount' => 'required|numeric|min:0',
-    //             'tax_breakdowns.*.tax_amount' => 'required|numeric|min:0',
-    
-    //             // Payment Details
-    //             'payment_details' => 'required|array|min:1',
-    //             'payment_details.*.payment_date' => 'nullable|date',
-    //             'payment_details.*.credit_transfer' => [
-    //                 'nullable',
-    //                 function ($attribute, $value, $fail) use ($request) {
-    //                     $index = explode('.', $attribute)[1]; // Extract array index
-    //                     $paymentDetail = $request->payment_details[$index] ?? null;
-    
-    //                     if ($paymentDetail &&
-    //                         isset($paymentDetail['payment_means_type_code']) &&
-    //                         $paymentDetail['payment_means_type_code'] === 'credit_transfer')
-    //                     {
-    //                         // Auto-generate credit_transfer by concatenating required fields
-    //                         $request->merge([
-    //                             'payment_details' => array_replace($request->payment_details, [
-    //                                 $index => array_merge($paymentDetail, [
-    //                                     'credit_transfer' => trim(
-    //                                         ($paymentDetail['payment_account_identifier'] ?? '') . ' ' .
-    //                                         ($paymentDetail['payment_account_name'] ?? '') . ' ' .
-    //                                         ($paymentDetail['payment_service_provider_identifier'] ?? '') . ' ' .
-    //                                         ($paymentDetail['scheme_identifier'] ?? '')
-    //                                     )
-    //                                 ])
-    //                             ])
-    //                         ]);
-    //                     }
-    //                 }
-    //             ],
-    //             'payment_details.*.payment_means_type_code' => 'required|string|max:20',
-    //             'payment_details.*.paid_amount' => 'nullable|numeric|min:0',
-    //             'payment_details.*.rounding_amount' => 'nullable|numeric',
-    //             'payment_details.*.amount_due_for_payment' => 'nullable|numeric',
-    //             'payment_details.*.payment_account_identifier' => 'nullable|string|max:100',
-    //             'payment_details.*.payment_account_name' => 'nullable|string|max:255',
-    //             'payment_details.*.payment_service_provider_identifier' => 'nullable|string|max:100',
-    //             'payment_details.*.scheme_identifier' => 'nullable|string|max:50',
-    //             'payment_details.*.payment_card_number' => 'nullable|string|max:20',
-    //             'payment_details.*.payment_card_primary_account_number' => 'nullable|string|max:25',
-    //             'payment_details.*.expiry_date' => 'nullable|string|max:5',
-    //             'payment_details.*.cvv' => 'nullable|string|max:4',
-    //         ]);
-    
-    //         // 2. AUTO-GENERATE INVOICE NUMBER
-    //         $validatedData['invoice_number'] = $this->generateInvoiceNumber($validatedData['invoice_issue_date']);
-    
-    //         // 4. CREATE INVOICE
-    //         $invoice = Invoice::create($validatedData);
-    
-    //         // 5. INSERT LINES
-    //         foreach ($request->invoice_lines as $line) {
-    //             $line['invoice_id'] = $invoice->invoice_id;
-    //             InvoiceLine::create($line);
-    //         }
-    
-    //         // 6. INSERT TAX BREAKDOWNS
-    //         foreach ($request->tax_breakdowns as $taxBreakdown) {
-    //             $taxBreakdown['invoice_id'] = $invoice->invoice_id;
-    //             TaxBreakdown::create($taxBreakdown);
-    //         }
-    
-    //         // 7. INSERT PAYMENT DETAILS
-    //         foreach ($request->payment_details as $paymentDetail) {
-    //             $paymentDetail['invoice_id'] = $invoice->invoice_id;
-    //             PaymentDetail::create($paymentDetail);
-    //         }
-    
-    //         // 8. LOAD RELATIONSHIPS & RETURN
-    //         $invoice->load(['seller', 'buyer', 'lines', 'taxBreakdowns', 'payments']);
-    
-    //         return response()->json([
-    //             'status' => 201,
-    //             'message' => 'Invoice created successfully',
-    //             'data' => $invoice
-    //         ]);
-    //     });
-    
-    //     return $invoice;
-    // }
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('invoice_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('seller', function ($sellerQuery) use ($searchTerm) {
+                      $sellerQuery->where('seller_name', 'like', '%' . $searchTerm . '%');
+                  })
+                  ->orWhereHas('buyer', function ($buyerQuery) use ($searchTerm) {
+                      $buyerQuery->where('buyer_name', 'like', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $invoices = $query->select('invoice_id', 'invoice_number')->get();
+        return response()->json(['status' => 200, 'data' => $invoices]);
+    }
 
     
     /**
