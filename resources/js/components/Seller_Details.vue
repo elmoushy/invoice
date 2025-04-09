@@ -307,15 +307,12 @@ export default {
 
   computed: {
     isDisclosedAgentBillingSelected() {
-      console.log("Checking disclosed agent billing status...");
-      console.log("Transaction types:", this.invoiceData.transactionTypes);
       
       const isSelected = this.invoiceData.transactionTypes &&
         this.invoiceData.transactionTypes.some(
           option => option.label === "Disclosed Agent Billing" && option.selected
         );
       
-      console.log("Is disclosed agent billing selected:", isSelected);
       return isSelected;
     },
     // Pattern for "Electronic Address" depending on the chosen scheme_identifier_electronic_address

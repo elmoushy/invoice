@@ -6,7 +6,7 @@
         <span class="icon">🧾</span> Invoice Lines
       </h3>
       <!-- Button to add new Invoice Line -->
-      <button class="add-line-button" @click="addInvoiceLine" :disabled="invoiceData.invoice_type_code === '381'">
+      <button class="add-line-button" @click="addInvoiceLine" :hidden="invoiceData.invoice_type_code === '381'">
         + Add Invoice Line
       </button>
 
@@ -353,6 +353,8 @@
       </div>
     </div>
 
+    <br>
+
     <!-- Tax Breakdown Section -->
     <div class="section tax-breakdown animate-in" style="animation-delay: 0.2s">
       <h3>
@@ -378,6 +380,7 @@
       </table>
     </div>
 
+    <br>
     <!-- Document Totals Section -->
     <div class="sections-grid">
       <div class="section document-totals animate-in">
