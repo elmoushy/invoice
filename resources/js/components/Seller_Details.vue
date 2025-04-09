@@ -7,7 +7,7 @@
         <!-- Dropdown for existing sellers -->
         <div class="select-row">
       <label class="form-label">Select Seller</label>
-      <select class="form-select" v-model="invoiceData.seller_id" required>
+      <select class="form-select" v-model="invoiceData.seller_id" :disabled="invoiceData.invoice_type_code === '381'" required>
         <option value="" disabled>Select Seller</option>
         <option v-for="seller in sellers" :key="seller.seller_id" :value="seller.seller_id">
           {{ seller.seller_name }}

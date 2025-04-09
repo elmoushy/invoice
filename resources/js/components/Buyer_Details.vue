@@ -7,7 +7,7 @@
       <!-- Existing Buyers Dropdown -->
       <div class="select-row">
         <label class="form-label">Select Buyer</label>
-        <select class="form-select" v-model="invoiceData.buyer_id" required>
+        <select class="form-select" v-model="invoiceData.buyer_id" required :disabled="invoiceData.invoice_type_code === '381'">
           <option value="" disabled>Select Buyer</option>
           <option
             v-for="buyer in buyers"

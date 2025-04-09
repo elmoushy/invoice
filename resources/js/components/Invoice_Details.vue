@@ -5,27 +5,27 @@
         <h3><span class="icon">🧾</span> Invoice Details</h3>
         <form>
           <!-- Invoice Transaction Types -->
-          <div class="form-row full-width">
+            <div class="form-row full-width">
             <label class="form-label">Invoice Transaction Types</label>
             <div class="transaction-types-grid">
               <div
-                v-for="(option, index) in transactionTypes"
-                :key="index"
-                class="transaction-type-item"
+              v-for="(option, index) in transactionTypes"
+              :key="index"
+              class="transaction-type-item"
               >
-                <label class="toggle-switch">
-                  <input
-                    type="checkbox"
-                    v-model="option.selected"
-                    :disabled="isRestrictedInvoiceType && restrictedTransactionTypes.includes(option.label)"
-                    @change="updateInvoiceTransactionTypeCode"
-                  />
-                  <span class="toggle-slider"></span>
-                  <span class="toggle-label">{{ option.label }}</span>
-                </label>
+              <label class="toggle-switch">
+                <input
+                type="checkbox"
+                v-model="option.selected"
+                :disabled="isCreditNote || (isRestrictedInvoiceType && restrictedTransactionTypes.includes(option.label))"
+                @change="updateInvoiceTransactionTypeCode"
+                />
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">{{ option.label }}</span>
+              </label>
               </div>
             </div>
-          </div>
+            </div>
 
           <div class="invoice-details-grid">
             <!-- Row 1: Issue date & Invoice type -->
@@ -36,6 +36,7 @@
                   type="date"
                   v-model="invoiceData.invoice_issue_date"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
               <div class="form-row">
@@ -80,7 +81,7 @@
                 </select>
               </div>
 
-              <div class="form-row">
+              <div class="form-row" hidden>
                 <label class="form-label">test Invoice to Credit Note</label>
                 <input
                   type="text"
@@ -121,6 +122,7 @@
                   v-model="invoiceData.invoice_currency_code"
                   class="form-select"
                   @change="fetchExchangeRate"
+                  :disabled="isCreditNote"
                 >
                   <option value="" disabled>Select Currency</option>
                   <option v-for="currency in currencies" :key="currency" :value="currency">
@@ -131,10 +133,7 @@
               <transition name="slide-fade">
                 <div
                   class="form-row"
-                  v-if="
-                    invoiceData.invoice_currency_code &&
-                    invoiceData.invoice_currency_code !== 'AED'
-                  "
+                  v-if="invoiceData.invoice_currency_code && invoiceData.invoice_currency_code !== 'AED'"
                 >
                   <label class="form-label">Tax accounting currency</label>
                   <div class="readonly-field">
@@ -156,10 +155,7 @@
             <transition name="slide-fade">
               <div
                 class="form-row-group"
-                v-if="
-                  invoiceData.invoice_currency_code &&
-                  invoiceData.invoice_currency_code !== 'AED'
-                "
+                v-if="invoiceData.invoice_currency_code && invoiceData.invoice_currency_code !== 'AED'"
               >
                 <div class="form-row full-width">
                   <label class="form-label">Currency Exchange Rate</label>
@@ -225,6 +221,7 @@
                     type="date"
                     v-model="invoiceData.summary_invoice_start_date"
                     class="form-control"
+                    :disabled="isCreditNote"
                   />
                 </div>
                 <div class="form-row">
@@ -233,6 +230,7 @@
                     type="date"
                     v-model="invoiceData.summary_invoice_end_date"
                     class="form-control"
+                    :disabled="isCreditNote"
                   />
                 </div>
               </div>
@@ -248,6 +246,7 @@
                     v-model="invoiceData.contract_reference"
                     class="form-control"
                     placeholder="Optional"
+                    :disabled="isCreditNote"
                   />
                   <small class="form-text">Optional field if needed</small>
                 </div>
@@ -259,6 +258,7 @@
                     class="form-control"
                     placeholder="Optional"
                     step="0.01"
+                    :disabled="isCreditNote"
                   />
                   <small class="form-text">Optional field if needed</small>
                 </div>
@@ -272,6 +272,7 @@
                   <select
                     v-model="invoiceData.billing_frequency"
                     class="form-select"
+                    :disabled="isCreditNote"
                   >
                     <option value="" disabled>Select Frequency</option>
                     <option value="daily">Daily</option>
@@ -295,12 +296,9 @@
                     type="text"
                     v-model="invoiceData.invoice_note"
                     class="form-control"
-                    :placeholder="
-                      invoiceData.billing_frequency === 'others'
-                        ? 'Required'
-                        : 'Optional'
-                    "
+                    :placeholder="invoiceData.billing_frequency === 'others' ? 'Required' : 'Optional'"
                     :required="invoiceData.billing_frequency === 'others'"
+                    :disabled="isCreditNote"
                   />
                   <small
                     class="form-text"
@@ -325,6 +323,7 @@
                     class="form-control"
                     placeholder="Enter Beneficiary ID"
                     required
+                    :disabled="isCreditNote"
                   />
                   <small class="form-text text-required"
                     >Required for Free Trade Zone transactions</small
@@ -349,15 +348,12 @@
                   type="text"
                   v-model="invoiceData.deliver_to_address_line_1"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
                 <div class="address-toggle" @click="showAddressLine2 = !showAddressLine2">
                   <span class="toggle-icon">{{ showAddressLine2 ? '−' : '+' }}</span>
                   <span class="toggle-text">
-                    {{
-                      showAddressLine2
-                        ? 'Hide additional address lines'
-                        : 'Add more address details'
-                    }}
+                    {{ showAddressLine2 ? 'Hide additional address lines' : 'Add more address details' }}
                   </span>
                 </div>
               </div>
@@ -367,6 +363,7 @@
                   type="text"
                   v-model="invoiceData.deliver_to_address_line_2"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
             </div>
@@ -379,6 +376,7 @@
                   type="text"
                   v-model="invoiceData.deliver_to_address_line_3"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
               <div class="form-row">
@@ -386,6 +384,7 @@
                 <select
                   v-model="invoiceData.deliver_to_country_code"
                   class="form-select"
+                  :disabled="isCreditNote"
                 >
                   <option value="" disabled>Select Country</option>
                   <option
@@ -406,6 +405,7 @@
                 <select
                   v-model="invoiceData.deliver_to_country_code"
                   class="form-select"
+                  :disabled="isCreditNote"
                 >
                   <option value="" disabled>Select Country</option>
                   <option
@@ -426,6 +426,7 @@
                 <select
                   v-model="invoiceData.deliver_to_country_subdivision"
                   class="form-select"
+                  :disabled="isCreditNote"
                 >
                   <option value="" disabled>Select Subdivision</option>
                   <option
@@ -443,6 +444,7 @@
                   type="text"
                   v-model="invoiceData.deliver_to_post_code"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
             </div>
@@ -455,6 +457,7 @@
                   type="text"
                   v-model="invoiceData.deliver_to_city"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
               <div class="form-row">
@@ -463,6 +466,7 @@
                   type="text"
                   v-model="invoiceData.deliver_to_party_name"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
             </div>
@@ -475,6 +479,7 @@
                   type="date"
                   v-model="invoiceData.actual_delivery_date"
                   class="form-control"
+                  :disabled="isCreditNote"
                 />
               </div>
             </div>
@@ -538,6 +543,9 @@ export default {
   setup() {
     const invoiceStore = useInvoiceStore()
     const { invoiceData } = storeToRefs(invoiceStore)
+
+    // Computed flag for Credit Note mode
+    const isCreditNote = computed(() => invoiceData.value.invoice_type_code === '381')
 
     // For currency exchange rate
     const isLoadingRate = ref(false)
@@ -632,7 +640,7 @@ export default {
       }
     )
 
-    // Are we restricted?
+    // Are we restricted? (still used for disabling toggles)
     const isRestrictedInvoiceType = computed(() => {
       return (
         invoiceData.value.invoice_type_code === '381' ||
@@ -694,7 +702,8 @@ export default {
       restrictedTransactionTypes,
       fetchExchangeRate,
       selectedSubdivisions,
-      onSelectCreditNoteRefInvoice
+      onSelectCreditNoteRefInvoice,
+      isCreditNote
     }
   },
 
@@ -787,6 +796,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .container {

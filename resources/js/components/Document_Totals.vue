@@ -6,7 +6,7 @@
         <span class="icon">🧾</span> Invoice Lines
       </h3>
       <!-- Button to add new Invoice Line -->
-      <button class="add-line-button" @click="addInvoiceLine">
+      <button class="add-line-button" @click="addInvoiceLine" :disabled="invoiceData.invoice_type_code === '381'">
         + Add Invoice Line
       </button>
 
@@ -24,25 +24,50 @@
             class="form-control"
             v-model="line.invoice_line_identifier"
             readonly
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Invoiced Quantity -->
         <div class="form-row">
           <label class="form-label">Invoiced Quantity</label>
+          <div class="quantity-control" v-if="invoiceData.invoice_type_code === '381'">
+            <input
+              type="text"
+              class="form-control"
+              v-model="line.invoiced_quantity"
+              placeholder="Invoiced Quantity"
+              @input="validateInvoicedQuantity(line, $event)"
+            />
+            <div class="quantity-arrows">
+              <button 
+                type="button" 
+                class="arrow-btn up"
+                @click="incrementQuantity(line)"
+                :disabled="isAtMaxQuantity(line)"
+              >▲</button>
+              <button 
+                type="button" 
+                class="arrow-btn down"
+                @click="decrementQuantity(line)"
+                :disabled="isAtMinQuantity(line)"
+              >▼</button>
+            </div>
+          </div>
           <input
+            v-else
             type="text"
             class="form-control"
             v-model="line.invoiced_quantity"
             placeholder="Invoiced Quantity"
-            @input="line.invoiced_quantity = line.invoiced_quantity.replace(/[^0-9.]/g, '')"
+            @input="validateInvoicedQuantity(line, $event)"
           />
         </div>
 
         <!-- Unit Measure Code -->
         <div class="form-row">
           <label class="form-label">Unit Measure Code</label>
-          <select class="form-select" v-model="line.invoiced_quantity_unit_code">
+          <select class="form-select" v-model="line.invoiced_quantity_unit_code" :disabled="invoiceData.invoice_type_code === '381'">
             <option value="" disabled>Select Unit</option>
             <option v-for="unit in units" :key="unit" :value="unit">
               {{ unit }}
@@ -60,6 +85,7 @@
               v-model="line.item_gross_price"
               placeholder="Item Gross Price"
               @input="line.item_gross_price = line.item_gross_price.replace(/[^0-9.]/g, '')"
+              :disabled="invoiceData.invoice_type_code === '381'"
             />
             <span class="currency">AED</span>
           </div>
@@ -68,7 +94,7 @@
         <!-- Discount Type -->
         <div class="form-row">
           <label class="form-label">Discount Type</label>
-          <select class="form-select" v-model="line.discount_type">
+          <select class="form-select" v-model="line.discount_type" :disabled="invoiceData.invoice_type_code === '381'">
             <option value="" disabled>Select Discount Type</option>
             <option value="static">Static</option>
             <option value="percentage">Percentage</option>
@@ -84,6 +110,7 @@
             v-model="line.discount_value"
             placeholder="Discount Value"
             @input="line.discount_value = line.discount_value.replace(/[^0-9.]/g, '')"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -96,6 +123,7 @@
               class="form-control"
               :value="line.item_net_price"
               readonly
+              :disabled="invoiceData.invoice_type_code === '381'"
             />
             <span class="currency">AED</span>
           </div>
@@ -109,6 +137,7 @@
             class="form-control"
             v-model="line.invoice_line_net_amount"
             readonly
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -120,6 +149,7 @@
             class="form-control"
             v-model="line.item_description"
             placeholder="Item Description"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -131,6 +161,7 @@
             class="form-control"
             v-model="line.item_classification"
             placeholder="Item Classification"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -142,13 +173,14 @@
             class="form-control"
             v-model="line.item_name"
             placeholder="Item Name"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Item Type -->
         <div class="form-row">
           <label class="form-label">Item Type</label>
-          <select class="form-select" v-model="line.item_type">
+          <select class="form-select" v-model="line.item_type" :disabled="invoiceData.invoice_type_code === '381'">
             <option value="" disabled>Select Item Type</option>
             <option value="Goods">Goods</option>
             <option value="Services">Services</option>
@@ -163,6 +195,7 @@
             class="form-control"
             v-model="line.item_price_base_quantity"
             placeholder="Item Price Base Quantity"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -174,6 +207,7 @@
             class="form-control"
             :value="line.invoiced_item_tax_rate"
             readonly
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -185,6 +219,7 @@
             class="form-control"
             :value="line.vat_line_amount"
             readonly
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -196,6 +231,7 @@
             class="form-control"
             v-model="line.classification_scheme_identifier"
             placeholder="Classification Scheme Identifier"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -207,6 +243,7 @@
             class="form-control"
             v-model="line.sac_scheme_identifier"
             placeholder="SAC Scheme Identifier"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -218,12 +255,13 @@
             v-model="line.invoiced_item_tax_category_code"
             @change="
               line.invoiced_item_tax_rate =
-                line.invoiced_item_tax_category_code === 'standard_rate'
-                  ? 5
-                  : line.invoiced_item_tax_category_code === 'Reverse_Charge'
-                    ? 5
-                    : 0
+          line.invoiced_item_tax_category_code === 'standard_rate'
+            ? 5
+            : line.invoiced_item_tax_category_code === 'Reverse_Charge'
+              ? 5
+              : 0
             "
+            :disabled="invoiceData.invoice_type_code === '381'"
           >
             <option value="" disabled>Select Tax Category</option>
             <option value="standard_rate">Standard rate (5% VAT)</option>
@@ -261,13 +299,14 @@
             class="form-control"
             v-model="line.tax_exemption_reason"
             placeholder="Enter tax exemption reason"
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Tax Exemption Reason Code -->
         <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'zero_rated'">
           <label class="form-label">Tax Exemption Reason Code</label>
-          <select class="form-select" v-model="line.tax_exemption_reason_code">
+          <select class="form-select" v-model="line.tax_exemption_reason_code" :disabled="invoiceData.invoice_type_code === '381'">
             <option value="" disabled>Select Exemption Reason</option>
             <option value="ZRE"
               >ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option
@@ -303,6 +342,7 @@
             @input="
               line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');
             "
+            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -341,63 +381,69 @@
     <!-- Document Totals Section -->
     <div class="sections-grid">
       <div class="section document-totals animate-in">
-        <h3>
-          <span class="icon">📄</span> Document Totals
-        </h3>
-        <div class="form-row">
-          <label class="form-label">Invoice Total Line Net Amount</label>
-          <input
-            type="text"
-            class="form-control"
-            :value="invoice_total_line_net_amount"
-            readonly
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Invoice Total Tax Amount</label>
-          <input
-            type="text"
-            class="form-control"
-            :value="invoice_total_tax_amount"
-            readonly
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Invoice Total With Tax</label>
-          <input
-            type="text"
-            class="form-control"
-            :value="invoice_total_with_tax"
-            readonly
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Paid Amount</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="invoiceData.paid_amount"
-            placeholder="Enter Paid Amount"
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Rounding Amount</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="invoiceData.rounding_amount"
-            placeholder="Enter Rounding Amount"
-          />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Invoice Due For Payment</label>
-          <input
-            type="text"
-            class="form-control"
-            :value="invoice_due_for_payment"
-            readonly
-          />
-        </div>
+      <h3>
+        <span class="icon">📄</span> Document Totals
+      </h3>
+      <div class="form-row">
+        <label class="form-label">Invoice Total Line Net Amount</label>
+        <input
+        type="text"
+        class="form-control"
+        :value="invoice_total_line_net_amount"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        readonly
+        />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Invoice Total Tax Amount</label>
+        <input
+        type="text"
+        class="form-control"
+        :value="invoice_total_tax_amount"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        readonly
+        />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Invoice Total With Tax</label>
+        <input
+        type="text"
+        class="form-control"
+        :value="invoice_total_with_tax"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        readonly
+        />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Paid Amount</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="invoiceData.paid_amount"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        placeholder="Enter Paid Amount"
+        />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Rounding Amount</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="invoiceData.rounding_amount"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        placeholder="Enter Rounding Amount"
+        />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Invoice Due For Payment</label>
+        <input
+        type="text"
+        class="form-control"
+        :value="invoice_due_for_payment"
+        :disabled="invoiceData.invoice_type_code === '381'"
+        readonly
+        />
+      </div>
       </div>
 
       <!-- Payment Details Section -->
@@ -407,75 +453,81 @@
         </h3>
         <div class="form-row">
           <label class="form-label">Payment Means Type Code</label>
-          <select class="form-select" v-model="invoiceData.payment_means_type_code">
-            <option value="" disabled>Select Payment Means</option>
-            <option value="1">Instrument Not Defined</option>
-            <option value="10">Bank Transfer</option>
-            <option value="31">Credit Card</option>
-            <option value="97">Cash</option>
-            <option value="ZZZ">Mutually Defined</option>
+          <select class="form-select" v-model="invoiceData.payment_means_type_code" :disabled="invoiceData.invoice_type_code === '381'">
+        <option value="" disabled>Select Payment Means</option>
+        <option value="1">Instrument Not Defined</option>
+        <option value="10">Bank Transfer</option>
+        <option value="31">Credit Card</option>
+        <option value="97">Cash</option>
+        <option value="ZZZ">Mutually Defined</option>
           </select>
         </div>
 
         <!-- If Payment Means = Credit Card -->
         <template v-if="invoiceData.payment_means_type_code === '31'">
           <div class="form-row">
-            <label class="form-label">Card Number</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="invoiceData.payment_card_primary_account_number"
-              placeholder="Enter Card Number"
-            />
+        <label class="form-label">Card Number</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="invoiceData.payment_card_primary_account_number"
+          placeholder="Enter Card Number"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
           <div class="form-row">
-            <label class="form-label">Cardholder Name</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="invoiceData.payment_account_name"
-              placeholder="Enter Cardholder Name"
-            />
+        <label class="form-label">Cardholder Name</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="invoiceData.payment_account_name"
+          placeholder="Enter Cardholder Name"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
           <div class="form-row">
-            <label class="form-label">Expiry Date</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="invoiceData.expiry_date"
-              placeholder="MM/YY"
-            />
+        <label class="form-label">Expiry Date</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="invoiceData.expiry_date"
+          placeholder="MM/YY"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
           <div class="form-row">
-            <label class="form-label">CVV</label>
-            <input
-              type="password"
-              class="form-control"
-              v-model="invoiceData.cvv"
-              placeholder="Enter CVV"
-            />
+        <label class="form-label">CVV</label>
+        <input
+          type="password"
+          class="form-control"
+          v-model="invoiceData.cvv"
+          placeholder="Enter CVV"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
         </template>
 
         <!-- If Payment Means = Bank Transfer -->
         <template v-if="invoiceData.payment_means_type_code === '10'">
           <div class="form-row">
-            <label class="form-label">Bank Account Number</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="invoiceData.payment_account_identifier"
-              placeholder="Enter Bank Account Number"
-            />
+        <label class="form-label">Bank Account Number</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="invoiceData.payment_account_identifier"
+          placeholder="Enter Bank Account Number"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
           <div class="form-row">
-            <label class="form-label">Bank Name</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="invoiceData.payment_account_name"
-              placeholder="Enter Bank Name"
-            />
+        <label class="form-label">Bank Name</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="invoiceData.payment_account_name"
+          placeholder="Enter Bank Name"
+          :disabled="invoiceData.invoice_type_code === '381'"
+        />
           </div>
         </template>
 
@@ -483,10 +535,11 @@
         <div class="form-row">
           <label class="form-label">Payment Date</label>
           <input
-            type="date"
-            class="form-control"
-            v-model="invoiceData.payment_date"
-            placeholder="Payment Date"
+        type="date"
+        class="form-control"
+        v-model="invoiceData.payment_date"
+        placeholder="Payment Date"
+        :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
       </div>
@@ -495,7 +548,7 @@
 </template>
 
 <script>
-import { computed, watchEffect } from 'vue'
+import { computed, watchEffect, ref, watch } from 'vue'
 import { useInvoiceStore } from '../invoice'
 import { storeToRefs } from 'pinia'
 
@@ -511,6 +564,8 @@ export default {
   setup(props) {
     const invoiceStore = useInvoiceStore()
     const { invoiceData } = storeToRefs(invoiceStore)
+    // Track original quantities for credit note validation
+    const originalInvoicedQuantities = ref({})
 
     // Ensure invoiceData exists and has an array for invoice_lines.
     if (!invoiceData.value) {
@@ -550,6 +605,105 @@ export default {
 
     const removeInvoiceLine = (index) => {
       invoiceData.value.invoice_lines.splice(index, 1)
+      // Also remove the tracked original quantity for this line
+      delete originalInvoicedQuantities.value[index]
+    }
+
+    // Track when invoice lines change in credit note mode
+    watch(() => invoiceData.value.invoice_lines, (newLines, oldLines) => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        // Store original quantities if we haven't already
+        newLines.forEach((line, index) => {
+          if (!originalInvoicedQuantities.value[index] && line.invoiced_quantity) {
+            originalInvoicedQuantities.value[index] = parseFloat(line.invoiced_quantity) || 0
+          }
+        })
+      }
+    }, { deep: true })
+
+    // Watch for changes in credit note reference to reset tracked quantities
+    watch(() => invoiceData.value.creditNoteRefInvoice, () => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        originalInvoicedQuantities.value = {}
+      }
+    })
+
+    // Validation function for invoiced quantity
+    const validateInvoicedQuantity = (line, event) => {
+      // Only apply validation for credit notes
+      if (invoiceData.value.invoice_type_code === '381') {
+        const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
+        const originalQty = originalInvoicedQuantities.value[lineIndex]
+        
+        // Clean input to ensure it's a valid number
+        let value = event.target.value.replace(/[^0-9.]/g, '')
+        let numValue = parseFloat(value) || 0
+        
+        // Ensure it's not less than 1
+        if (numValue < 1) {
+          numValue = 1
+        }
+        
+        // Ensure it doesn't exceed original quantity if we have one
+        if (originalQty !== undefined) {
+          if (numValue > originalQty) {
+            numValue = originalQty
+          }
+        }
+        
+        // Update the value
+        line.invoiced_quantity = numValue.toString()
+      }
+    }
+
+    // Increment quantity with validation
+    const incrementQuantity = (line) => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
+        const originalQty = originalInvoicedQuantities.value[lineIndex]
+        
+        let currentValue = parseFloat(line.invoiced_quantity) || 0
+        // Only increment if we're below the original quantity
+        if (originalQty !== undefined && currentValue < originalQty) {
+          currentValue++
+          line.invoiced_quantity = currentValue.toString()
+        }
+      }
+    }
+    
+    // Decrement quantity with validation
+    const decrementQuantity = (line) => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        let currentValue = parseFloat(line.invoiced_quantity) || 0
+        // Only decrement if we're above 1
+        if (currentValue > 1) {
+          currentValue--
+          line.invoiced_quantity = currentValue.toString()
+        }
+      }
+    }
+    
+    // Check if at maximum allowed quantity
+    const isAtMaxQuantity = (line) => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
+        const originalQty = originalInvoicedQuantities.value[lineIndex]
+        
+        if (originalQty !== undefined) {
+          const currentValue = parseFloat(line.invoiced_quantity) || 0
+          return currentValue >= originalQty
+        }
+      }
+      return false
+    }
+    
+    // Check if at minimum allowed quantity
+    const isAtMinQuantity = (line) => {
+      if (invoiceData.value.invoice_type_code === '381') {
+        const currentValue = parseFloat(line.invoiced_quantity) || 0
+        return currentValue <= 1
+      }
+      return false
     }
 
     // Recompute line amounts on data changes.
@@ -690,6 +844,11 @@ export default {
       units,
       addInvoiceLine,
       removeInvoiceLine,
+      validateInvoicedQuantity,
+      incrementQuantity,
+      decrementQuantity,
+      isAtMaxQuantity,
+      isAtMinQuantity,
       computedTaxBreakdownByCategory,
       invoice_total_line_net_amount,
       invoice_total_tax_amount,
@@ -893,5 +1052,60 @@ h3 {
 @media (max-width: 768px) {
   .sections-grid { grid-template-columns: 1fr; }
   .invoice-line-grid { grid-template-columns: 1fr; }
+}
+
+/* Add quantity control styling */
+.quantity-control {
+  position: relative;
+  display: flex;
+}
+
+.quantity-control input {
+  width: calc(100% - 30px);
+  padding-right: 35px;
+}
+
+.quantity-arrows {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 30px;
+}
+
+.arrow-btn {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.arrow-btn:first-child {
+  border-top-right-radius: 8px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.arrow-btn:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.arrow-btn:hover:not(:disabled) {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.arrow-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

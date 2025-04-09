@@ -49,7 +49,10 @@ class Case1InvoiceController extends Controller
 
     public function index2(Request $request)
     {
-        $query = Invoice::query();
+        $query = Invoice::query()
+            ->whereRaw("SUBSTR(invoice_transaction_type_code,2,1) != '1'")
+            ->whereRaw("SUBSTR(invoice_transaction_type_code,3,1) != '1'")
+            ->whereRaw("SUBSTR(invoice_transaction_type_code,4,1) != '1'");
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
