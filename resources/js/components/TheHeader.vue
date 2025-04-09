@@ -93,6 +93,15 @@
     methods: {
       toggleSidebar() {
         this.isSidebarCollapsed = !this.isSidebarCollapsed;
+        
+        // If the sidebar is being collapsed, close all submenus
+        if (this.isSidebarCollapsed) {
+          this.menuItems.forEach(item => {
+            if (item.children) {
+              item.expanded = false;
+            }
+          });
+        }
       },
       toggleSubmenu(item) {
         item.expanded = !item.expanded;
@@ -313,4 +322,3 @@
     transform: rotate(20deg);
   }
   </style>
-  
