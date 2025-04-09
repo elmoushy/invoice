@@ -151,9 +151,6 @@ class Invoice extends Model
                 if (empty($invoice->creditNoteRefInvoice)) {
                     throw new \Exception('The creditNoteRefInvoice field is required for Credit Notes.');
                 }
-                if (empty($invoice->correction_method)) {
-                    throw new \Exception('The correction_method field is required for Credit Notes.');
-                }
                 if (empty($invoice->reason_for_credit_note)) {
                     throw new \Exception('The reason_for_credit_note field is required for Credit Notes.');
                 }

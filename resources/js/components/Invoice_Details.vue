@@ -92,27 +92,47 @@
                 />
               </div>
 
-              <div class="form-row">
+              <!-- <div class="form-row">
                 <label class="form-label">Correction Method</label>
                 <select v-model="invoiceData.correction_method" class="form-select">
                   <option value="" disabled>Select Correction Method</option>
                   <option value="Full">Full</option>
                   <option value="Partial">Partial</option>
                 </select>
-              </div>
+              </div> -->
+
               <div class="form-row">
                 <label class="form-label">
                   Reason for Credit Note <span class="required-marker">*</span>
                 </label>
-                <input
-                  type="text"
-                  v-model="invoiceData.reason_for_credit_note"
-                  class="form-control"
-                  placeholder="Enter reason for credit note"
-                  required
-                />
+                <div style="display: flex; align-items: center;">
+                  <select
+                    v-model="invoiceData.reason_for_credit_note"
+                    class="form-select"
+                    style="width: auto; margin-right: 8px;"
+                  >
+                    <option value="" disabled>Select reason</option>
+                    <option value="Item return">Item return</option>
+                    <option value="Price reduction / discount adjustment">Price reduction / discount adjustment</option>
+                    <option value="Quantity correction">Quantity correction</option>
+                    <option value="Wrong VAT rate">Wrong VAT rate</option>
+                    <option value="Full cancellation of invoice">Full cancellation of invoice</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <span v-if="invoiceData.reason_for_credit_note === 'Other'">: </span>
+                  <input
+                    v-if="invoiceData.reason_for_credit_note === 'Other'"
+                    type="text"
+                    v-model="invoiceData.reason_for_credit_note_custom"
+                    class="form-control"
+                    style="width: 220px;"
+                    placeholder="type here"
+                    required
+                  />
+                </div>
               </div>
             </div>
+
 
             <!-- Row 2: Currency fields -->
             <div class="form-row-group">
@@ -557,10 +577,8 @@ export default {
 
     // Fetch the list of "last invoices" from backend
     const fetchLastInvoices = async () => {
-      console.log('Fetching last invoices from /api/listinvoice/cases...')
       try {
         const response = await axios.get('/api/listinvoice/cases')
-        console.log('Response from /api/listinvoice/cases:', response.data)
         lastInvoices.value = response.data?.data || []
       } catch (err) {
         console.error('Error fetching last invoices:', err)

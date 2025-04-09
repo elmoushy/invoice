@@ -67,7 +67,7 @@
         <!-- Unit Measure Code -->
         <div class="form-row">
           <label class="form-label">Unit Measure Code</label>
-          <select class="form-select" v-model="line.invoiced_quantity_unit_code" :disabled="invoiceData.invoice_type_code === '381'">
+          <select class="form-select" v-model="line.invoiced_quantity_unit_code">
             <option value="" disabled>Select Unit</option>
             <option v-for="unit in units" :key="unit" :value="unit">
               {{ unit }}
@@ -85,7 +85,6 @@
               v-model="line.item_gross_price"
               placeholder="Item Gross Price"
               @input="line.item_gross_price = line.item_gross_price.replace(/[^0-9.]/g, '')"
-              :disabled="invoiceData.invoice_type_code === '381'"
             />
             <span class="currency">AED</span>
           </div>
@@ -94,7 +93,7 @@
         <!-- Discount Type -->
         <div class="form-row">
           <label class="form-label">Discount Type</label>
-          <select class="form-select" v-model="line.discount_type" :disabled="invoiceData.invoice_type_code === '381'">
+          <select class="form-select" v-model="line.discount_type">
             <option value="" disabled>Select Discount Type</option>
             <option value="static">Static</option>
             <option value="percentage">Percentage</option>
@@ -110,7 +109,6 @@
             v-model="line.discount_value"
             placeholder="Discount Value"
             @input="line.discount_value = line.discount_value.replace(/[^0-9.]/g, '')"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -123,7 +121,6 @@
               class="form-control"
               :value="line.item_net_price"
               readonly
-              :disabled="invoiceData.invoice_type_code === '381'"
             />
             <span class="currency">AED</span>
           </div>
@@ -137,7 +134,6 @@
             class="form-control"
             v-model="line.invoice_line_net_amount"
             readonly
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -149,7 +145,6 @@
             class="form-control"
             v-model="line.item_description"
             placeholder="Item Description"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -161,7 +156,6 @@
             class="form-control"
             v-model="line.item_classification"
             placeholder="Item Classification"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -173,14 +167,13 @@
             class="form-control"
             v-model="line.item_name"
             placeholder="Item Name"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Item Type -->
         <div class="form-row">
           <label class="form-label">Item Type</label>
-          <select class="form-select" v-model="line.item_type" :disabled="invoiceData.invoice_type_code === '381'">
+          <select class="form-select" v-model="line.item_type">
             <option value="" disabled>Select Item Type</option>
             <option value="Goods">Goods</option>
             <option value="Services">Services</option>
@@ -195,7 +188,6 @@
             class="form-control"
             v-model="line.item_price_base_quantity"
             placeholder="Item Price Base Quantity"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -207,7 +199,6 @@
             class="form-control"
             :value="line.invoiced_item_tax_rate"
             readonly
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -219,7 +210,6 @@
             class="form-control"
             :value="line.vat_line_amount"
             readonly
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -231,7 +221,6 @@
             class="form-control"
             v-model="line.classification_scheme_identifier"
             placeholder="Classification Scheme Identifier"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -243,7 +232,6 @@
             class="form-control"
             v-model="line.sac_scheme_identifier"
             placeholder="SAC Scheme Identifier"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
@@ -261,13 +249,13 @@
               ? 5
               : 0
             "
-            :disabled="invoiceData.invoice_type_code === '381'"
           >
             <option value="" disabled>Select Tax Category</option>
             <option value="standard_rate">Standard rate (5% VAT)</option>
             <option value="Reverse_Charge">Reverse Charge (5% VAT)</option>
             <option value="zero_rated">Zero-rated (0% VAT)</option>
             <option value="exempt">Exempt (0% VAT)</option>
+            <option value="Out_of_scope">Out of scope of tax (0% VAT)</option>
             <!-- Additional options when Margin Scheme is selected -->
             <option v-if="isMarginSchemeSelected" value="second_hand">
               Second hand goods (0% VAT)
@@ -299,14 +287,13 @@
             class="form-control"
             v-model="line.tax_exemption_reason"
             placeholder="Enter tax exemption reason"
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Tax Exemption Reason Code -->
         <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'zero_rated'">
           <label class="form-label">Tax Exemption Reason Code</label>
-          <select class="form-select" v-model="line.tax_exemption_reason_code" :disabled="invoiceData.invoice_type_code === '381'">
+          <select class="form-select" v-model="line.tax_exemption_reason_code">
             <option value="" disabled>Select Exemption Reason</option>
             <option value="ZRE"
               >ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option
@@ -342,12 +329,11 @@
             @input="
               line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');
             "
-            :disabled="invoiceData.invoice_type_code === '381'"
           />
         </div>
 
         <!-- Remove line button -->
-        <button class="remove-line-button" @click="removeInvoiceLine(index)">
+        <button class="remove-line-button" @click="removeInvoiceLine(index)" :hidden="invoiceData.invoice_type_code === '381'">
           Remove
         </button>
       </div>

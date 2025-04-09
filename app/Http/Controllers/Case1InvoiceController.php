@@ -152,6 +152,55 @@ class Case1InvoiceController extends Controller
         };
     }
 
+    private function linesAreEqual(array $newLines, \Illuminate\Support\Collection $oldLines): bool
+{
+    // 1. Must have the same number of lines
+    if (count($newLines) !== $oldLines->count()) {
+        return false;
+    }
+
+    // 2. Compare each new line to the corresponding old line by index
+    foreach ($newLines as $index => $newLine) {
+        // Find the corresponding "old" line
+        $oldLine = $oldLines[$index] ?? null;
+        if (!$oldLine) {
+            return false;
+        }
+
+        if (
+            // String fields must match exactly
+            ($newLine['invoice_line_identifier'] ?? null) !== $oldLine->invoice_line_identifier ||
+            ($newLine['invoiced_quantity_unit_code'] ?? null) !== $oldLine->invoiced_quantity_unit_code ||
+            ($newLine['item_description'] ?? null) !== $oldLine->item_description ||
+            ($newLine['item_classification'] ?? null) !== $oldLine->item_classification ||
+            ($newLine['item_name'] ?? null) !== $oldLine->item_name ||
+            ($newLine['item_type'] ?? null) !== $oldLine->item_type ||
+            ($newLine['classification_scheme_identifier'] ?? null) !== $oldLine->classification_scheme_identifier ||
+            ($newLine['sac_scheme_identifier'] ?? null) !== $oldLine->sac_scheme_identifier ||
+            ($newLine['discount_type'] ?? null) !== $oldLine->discount_type ||
+            ($newLine['invoiced_item_tax_category_code'] ?? null) !== $oldLine->invoiced_item_tax_category_code ||
+            ($newLine['tax_exemption_reason'] ?? null) !== $oldLine->tax_exemption_reason ||
+            ($newLine['tax_exemption_reason_code'] ?? null) !== $oldLine->tax_exemption_reason_code ||
+            ($newLine['Item_Standard_Identifier'] ?? null) !== $oldLine->Item_Standard_Identifier ||
+
+            // Numeric fields: compare old to ABS(new)
+            abs((float)($newLine['invoiced_quantity'] ?? 0)) !== (float)$oldLine->invoiced_quantity ||
+            abs((float)($newLine['item_net_price'] ?? 0)) !== (float)$oldLine->item_net_price ||
+            abs((float)($newLine['item_gross_price'] ?? 0)) !== (float)$oldLine->item_gross_price ||
+            abs((float)($newLine['invoice_line_net_amount'] ?? 0)) !== (float)$oldLine->invoice_line_net_amount ||
+            abs((float)($newLine['item_price_base_quantity'] ?? 0)) !== (float)$oldLine->item_price_base_quantity ||
+            abs((float)($newLine['invoiced_item_tax_rate'] ?? 0)) !== (float)$oldLine->invoiced_item_tax_rate ||
+            abs((float)($newLine['vat_line_amount'] ?? 0)) !== (float)$oldLine->vat_line_amount ||
+            abs((float)($newLine['discount_value'] ?? 0)) !== (float)$oldLine->discount_value
+        ) {
+            // At the first mismatch, return false immediately
+            return false;
+        }
+    }
+    // 4. If we complete the loop with no mismatches, the lines are considered identical
+    return true;
+}
+
     public function store(Request $request)
     {
         $invoice = DB::transaction(function () use ($request) {
@@ -200,7 +249,7 @@ class Case1InvoiceController extends Controller
                 'actual_delivery_date' => 'nullable|date',
                 'creditNoteRefInvoice' => 'nullable|numeric',
                 'creditNoteRefInvoice_number' => 'nullable|string',
-                'correction_method' => 'nullable|string',
+                // 'correction_method' => 'nullable|string',
                 'reason_for_credit_note' => 'nullable|string',
 
                 
@@ -313,7 +362,30 @@ class Case1InvoiceController extends Controller
                 $validatedData['location_scheme_identifier'] = '0088';
             }
 
-            // 2. For each invoice line, if Item_Standard_Identifier is given, run the GTIN check
+            // If this invoice is a Credit Note (type_code 381), then:
+            if (!empty($validatedData['invoice_type_code']) && $validatedData['invoice_type_code'] === '381') {
+                // Retrieve the "original" invoice that we are crediting
+                $originalInvoice = Invoice::with('lines')
+                    ->find($validatedData['creditNoteRefInvoice']);
+
+                if (!$originalInvoice) {
+                    throw new \Exception(
+                        "No invoice found with ID = {$validatedData['creditNoteRefInvoice']} " .
+                        "to reference for this credit note."
+                    );
+                }
+
+                // Compare lines
+                if ($this->linesAreEqual($validatedData['invoice_lines'], $originalInvoice->lines)) {
+                    // If they match exactly, set the correction method to FULL
+                    $validatedData['correction_method'] = 'FULL';
+                } else {
+                    // Otherwise partial
+                    $validatedData['correction_method'] = 'PARTIAL';
+                }
+            }
+
+            // For each invoice line, if Item_Standard_Identifier is given, run the GTIN check
             foreach ($validatedData['invoice_lines'] as $i => $line) {
                 $code = $line['Item_Standard_Identifier'] ?? null;
 

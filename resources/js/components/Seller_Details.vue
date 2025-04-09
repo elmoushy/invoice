@@ -315,7 +315,6 @@ export default {
       
       return isSelected;
     },
-    // Pattern for "Electronic Address" depending on the chosen scheme_identifier_electronic_address
     electronicAddressPattern() {
       switch (this.newSeller.scheme_identifier_electronic_address) {
         case "0088":
