@@ -25,7 +25,7 @@ if [ ! -f ".env" ]; then
     echo "Setting up environment file..."
     cp .env.example .env
     php artisan key:generate
-    
+
     # Configure for SQLite
     sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
     sed -i 's/DB_HOST=127.0.0.1/#DB_HOST=127.0.0.1/' .env

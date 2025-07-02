@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/Home.vue'
-import Login from '../components/Login.vue'
+import Login from '../components/login.vue'
 import CreateInvoiceLayout from '../components/CreateInvoiceLayout.vue'
 import InvoiceDetails from '../components/Invoice_Details.vue'
 import SellerDetails from '../components/Seller_Details.vue'
