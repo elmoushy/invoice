@@ -9,8 +9,6 @@ import DocumentTotals from '../components/Document_Totals.vue'
 import TheInvoice from '../components/TheInvoice.vue'
 import AllInvoices from '../components/AllInvoices.vue'
 import redirect from '../components/redirect.vue'
-import { cos } from 'three/tsl'
-
 
 const routes = [
   {
