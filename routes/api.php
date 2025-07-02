@@ -33,3 +33,19 @@ Route::get('/invoice_case1_index', [Case1InvoiceController::class, 'index']);
 Route::get('/listinvoice/cases', [Case1InvoiceController::class, 'index2']);
 Route::get('/invoice/{id}', [Case1InvoiceController::class, 'show']);
 Route::put('/invoice/{id}', [Case1InvoiceController::class, 'update']);
+
+// Test route for CSRF debugging
+Route::get('/test-csrf', function () {
+    return response()->json([
+        'message' => 'CSRF test successful',
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+    ]);
+});
+
+Route::post('/test-csrf-post', function () {
+    return response()->json([
+        'message' => 'POST request successful',
+        'csrf_token' => csrf_token(),
+    ]);
+});

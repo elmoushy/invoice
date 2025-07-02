@@ -7,8 +7,16 @@
 import axios from 'axios';
 window.axios = axios;
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+// Set base URL from multiple sources with fallbacks
+const appUrl = import.meta.env.VITE_APP_URL ||
+               document.querySelector('meta[name="app-url"]')?.getAttribute('content') ||
+               window.location.origin;
 
+window.axios.defaults.baseURL = appUrl;
+window.axios.defaults.withCredentials = true;
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.headers.common['Accept'] = 'application/json';
+window.axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Set the CSRF token from a meta tag if it exists
 const token = document.head.querySelector('meta[name="csrf-token"]');
@@ -17,6 +25,26 @@ if (token) {
 } else {
   console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
+
+// Initialize CSRF cookie for Sanctum
+let csrfInitialized = false;
+
+window.axios.interceptors.request.use(async (config) => {
+  // Only initialize CSRF for stateful requests
+  if (!csrfInitialized && ['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase())) {
+    try {
+      // Use Sanctum's built-in CSRF cookie endpoint
+      await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+      csrfInitialized = true;
+    } catch (error) {
+      console.warn('Failed to fetch CSRF cookie:', error);
+    }
+  }
+
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening

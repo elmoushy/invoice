@@ -34,7 +34,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { useApi } from '../composables/useApi'
+// Alternative: import AppService from '../services/AppService'
 
 export default {
   name: "Login",
@@ -48,11 +49,26 @@ export default {
   methods: {
     async login() {
       try {
-        const response = await axios.post('/api/login', {
+        // Method 1: Using the composable (recommended)
+        const { post } = useApi()
+        const response = await post('/api/login', {
           email: this.email,
           password: this.password
         });
-        const token = response.data.data.token;
+
+        // Method 2: Using AppService
+        // const response = await axios.post(AppService.apiUrl('/login'), {
+        //   email: this.email,
+        //   password: this.password
+        // });
+
+        // Method 3: Using axios directly (baseURL is already set)
+        // const response = await axios.post('/api/login', {
+        //   email: this.email,
+        //   password: this.password
+        // });
+
+        const token = response.data.token;
         localStorage.setItem('auth_token', token);
         // Redirect to Home after login
         this.$router.push('/');

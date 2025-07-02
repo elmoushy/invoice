@@ -4,10 +4,10 @@
         <div class="container-fluid d-flex justify-content-between align-items-center">
           <!-- Centered Title -->
           <div class="d-flex align-items-center header-title" style="margin-left: 10px;">
-        <i class="fas fa-file-invoice-dollar me-2 icon text-white"></i> 
+        <i class="fas fa-file-invoice-dollar me-2 icon text-white"></i>
         <span class="navbar-brand mb-0 h1">E-Invoice</span>
           </div>
-      
+
           <!-- Navigation Links -->
           <div class="d-flex">
         <ul class="navbar-nav d-flex flex-row align-items-center">
@@ -21,7 +21,7 @@
           </div>
         </div>
       </nav>
-  
+
       <!-- Sidebar -->
       <div :class="['sidebar', { 'collapsed': isSidebarCollapsed }]">
         <ul class="nav flex-column">
@@ -50,9 +50,9 @@
             </transition>
           </li>
         </ul>
-  
+
         <!-- Sidebar Toggle Button -->
-        <button 
+        <button
           class="sidebar-toggle-button"
           :class="{ 'is-active': !isSidebarCollapsed }"
           @click="toggleSidebar"
@@ -60,13 +60,13 @@
           <i class="fas fa-angle-right"></i>
         </button>
       </div>
-  
+
       <!-- Main Content -->
       <div class="main-content">
         <router-view></router-view>
       </div>
   </template>
-  
+
   <script>
   export default {
     name: 'TheHeader',
@@ -74,10 +74,10 @@
       return {
         isSidebarCollapsed: false,
         menuItems: [
-          { name: 'Notifications', icon: 'fas fa-bell', route: '/notifications' },
+        //   { name: 'Notifications', icon: 'fas fa-bell', route: '/notifications' },
           { name: 'Dashboard', icon: 'fas fa-chart-bar', route: '/' },
-          { 
-            name: 'Invoice', 
+          {
+            name: 'Invoice',
             icon: 'fas fa-file-alt',
             expanded: false,
             children: [
@@ -85,15 +85,15 @@
               { name: 'Invoices', icon: '', route: '/all_invoice' }
             ]
           },
-          { name: 'Sales', icon: 'fas fa-dollar-sign', route: '/sales' },
-          { name: 'Purchases', icon: 'fas fa-shopping-bag', route: '/purchases' },
+        //   { name: 'Sales', icon: 'fas fa-dollar-sign', route: '/sales' },
+        //   { name: 'Purchases', icon: 'fas fa-shopping-bag', route: '/purchases' },
         ],
       };
     },
     methods: {
       toggleSidebar() {
         this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        
+
         // If the sidebar is being collapsed, close all submenus
         if (this.isSidebarCollapsed) {
           this.menuItems.forEach(item => {
@@ -113,7 +113,7 @@
     },
   };
   </script>
-  
+
   <style scoped>
   /* Header */
   .custom-header {
@@ -129,12 +129,12 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     animation: slideDown 0.6s ease-out;
   }
-  
-  
+
+
   .header-title {
     animation: fadeIn 0.8s ease-out;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -143,7 +143,7 @@
       opacity: 1;
     }
   }
-  
+
   /* Sidebar */
   .sidebar {
     width: 240px;
@@ -158,12 +158,12 @@
     box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
     z-index: 10;
   }
-  
+
   .sidebar.collapsed {
     width: 60px;
     padding: 20px 10px;
   }
-  
+
   /* Navigation */
   .nav-item {
     margin-bottom: 12px;
@@ -171,12 +171,12 @@
     overflow: hidden;
     transition: all 0.3s ease;
   }
-  
+
   .nav-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
     transform: translateX(3px);
   }
-  
+
   .nav-link {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
@@ -187,7 +187,7 @@
     transition: all 0.3s ease;
     position: relative;
   }
-  
+
   .nav-link i {
     margin-right: 12px;
     font-size: 18px;
@@ -195,19 +195,19 @@
     text-align: center;
     transition: all 0.3s ease;
   }
-  
+
   .nav-link.router-link-active {
     background-color: rgba(255, 255, 255, 0.15);
     color: #ffffff;
     font-weight: 500;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   .nav-link.router-link-active i {
     color: #ffffff;
     transform: scale(1.1);
   }
-  
+
   .nav-link.router-link-active::before {
     content: "";
     position: absolute;
@@ -218,7 +218,7 @@
     background: #ffffff;
     border-radius: 0 2px 2px 0;
   }
-  
+
   /* Sidebar collapsed: Hide text */
   .sidebar.collapsed .nav-link span {
     opacity: 0;
@@ -226,13 +226,13 @@
     white-space: nowrap;
     transition: opacity 0.2s ease, width 0.2s ease;
   }
-  
+
   .sidebar:not(.collapsed) .nav-link span {
     opacity: 1;
     width: auto;
     transition: opacity 0.4s ease 0.1s;
   }
-  
+
   /* Sidebar Toggle Button */
   .sidebar-toggle-button {
     position: absolute;
@@ -252,38 +252,38 @@
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  
+
   .sidebar-toggle-button i {
     font-size: 20px;
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  
+
   .sidebar-toggle-button.is-active i {
     transform: rotate(180deg);
   }
-  
+
   .sidebar-toggle-button:hover {
     background-color: #112240;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
     transform: translateX(-50%) scale(1.05);
   }
-  
+
   /* Submenu Styles */
   .submenu {
     list-style: none;
     padding-left: 20px;
     transition: all 0.4s ease;
   }
-  
+
   .submenu .nav-item {
     margin-bottom: 8px;
   }
-  
+
   .submenu .nav-link {
     padding: 10px;
     font-size: 14px;
   }
-  
+
   /* Transition for submenu using Vue's transition */
   .submenu-fade-enter-active, .submenu-fade-leave-active {
     transition: opacity 0.4s ease, transform 0.4s ease;
@@ -292,18 +292,18 @@
     opacity: 0;
     transform: translateY(-10px);
   }
-  
+
   /* Main Content */
   .main-content {
     margin-left: 240px;
     padding: 60px 0px;
     transition: margin-left 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  
+
   .sidebar.collapsed ~ .main-content {
     margin-left: 60px;
   }
-  
+
   /* Additional Animations */
   /* Logout Button Hover */
   .logout-btn {
@@ -313,7 +313,7 @@
     background: rgba(255, 255, 255, 0.1);
     transform: scale(1.05);
   }
-  
+
   /* Header Icon Hover */
   .custom-header .icon {
     transition: transform 0.3s ease;

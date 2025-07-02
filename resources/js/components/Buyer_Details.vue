@@ -200,11 +200,19 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Country Code</label>
-                <input
-                  type="text"
+                <select
                   class="form-control"
                   v-model="newBuyer.country_code"
-                />
+                >
+                  <option value="" disabled>Select Country</option>
+                  <option
+                    v-for="country in countryCodes"
+                    :key="country.code"
+                    :value="country.code"
+                  >
+                    {{ country.code }} - {{ country.name }}
+                  </option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Country Subdivision</label>
@@ -246,6 +254,26 @@ export default {
     return {
       buyers: [],
       showForm: false,
+      countryCodes: [
+        { code: 'US', name: 'United States', flag: '🇺🇸' },
+        { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+        { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+        { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+        { code: 'FR', name: 'France', flag: '🇫🇷' },
+        { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+        { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+        { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+        { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+        { code: 'CN', name: 'China', flag: '🇨🇳' },
+        { code: 'IN', name: 'India', flag: '🇮🇳' },
+        { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+        { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+        { code: 'RU', name: 'Russia', flag: '🇷🇺' },
+        { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+        { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪' },
+        { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+        { code: 'EG', name: 'Egypt', flag: '🇪🇬' }
+      ],
       // Data for creating a new buyer
       newBuyer: {
         buyer_name: "",

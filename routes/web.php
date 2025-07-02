@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\Storage;
 //     return view('login');
 // });
 
-
 Route::get('/{any?}', function () {
-    return view('app'); 
+    return view('app');
 })->where('any', '.*');

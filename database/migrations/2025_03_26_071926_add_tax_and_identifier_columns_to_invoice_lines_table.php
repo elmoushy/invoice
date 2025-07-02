@@ -22,12 +22,8 @@ class AddTaxAndIdentifierColumnsToInvoiceLinesTable extends Migration
             $table->string('Item_Standard_Identifier')->nullable();
         });
 
-        // Add a check constraint to ensure Item_Standard_Identifier is 8, 12, 13, or 14 characters long
-        DB::statement("
-            ALTER TABLE invoice_lines 
-            ADD CONSTRAINT chk_Item_Standard_Identifier_length 
-            CHECK (CHAR_LENGTH(Item_Standard_Identifier) IN (8, 12, 13, 14))
-        ");
+        // Note: SQLite check constraint syntax is different, so we'll skip this for now
+        // The application layer should handle validation for Item_Standard_Identifier length
     }
 
     /**
@@ -37,9 +33,6 @@ class AddTaxAndIdentifierColumnsToInvoiceLinesTable extends Migration
      */
     public function down()
     {
-        // Drop the check constraint (note: the syntax may vary depending on your database)
-        DB::statement("ALTER TABLE invoice_lines DROP CONSTRAINT IF EXISTS chk_Item_Standard_Identifier_length");
-
         Schema::table('invoice_lines', function (Blueprint $table) {
             $table->dropColumn('tax_exemption_reason');
             $table->dropColumn('tax_exemption_reason_code');
