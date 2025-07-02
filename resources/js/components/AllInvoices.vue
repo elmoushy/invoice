@@ -1,7 +1,14 @@
 <template>
   <div class="invoices-dashboard">
-    <h2 class="dashboard-title">Invoices</h2>
-    
+    <h2 class="dashboard-title">
+      <span class="typewriter-container">
+        <span class="typewriter-text" :style="{ width: typewriterWidth }">
+          <span class="holographic-text"  style="background-color: black!important;">{{ displayText }}</span>
+        </span>
+        <span class="futuristic-cursor" :class="{ 'pulse': showCursor }"></span>
+      </span>
+    </h2>
+
     <!-- Search, Filter, and Sort -->
     <div class="search-container">
       <div class="search-input-container">
@@ -40,14 +47,14 @@
         <div class="invoice-content">
           <div class="invoice-header">
             <div class="invoice-number">{{ invoice.number }}</div>
-            <div 
-              :class="['invoice-status', `status-${invoice.status}`]" 
+            <div
+              :class="['invoice-status', `status-${invoice.status}`]"
               :data-status="invoice.statusLabel"
             >
               {{ invoice.statusLabel }}
             </div>
           </div>
-          
+
           <div class="invoice-body">
             <div class="invoice-customer">
               <i class="fas fa-user"></i> {{ invoice.customerName }}
@@ -59,7 +66,7 @@
               <i class="fas fa-tag"></i> {{ invoice.amount }}
               <button
                 class="action-btn"
-                @click.stop="downloadInvoice(invoice.id)" 
+                @click.stop="downloadInvoice(invoice.id)"
                 title="Download"
                 style="margin-left: auto;"
               >
@@ -70,7 +77,7 @@
         </div>
       </div>
     </transition-group>
-    
+
     <!-- Pagination -->
     <div class="pagination" v-if="invoicesData">
       <button
@@ -104,7 +111,13 @@ export default {
       searchQuery: '',
       selectedStatus: 'all',
       sortOption: 'date-desc',
-      currentPage: 1
+      currentPage: 1,
+      fullText: 'Invoices',
+      displayText: '',
+      typewriterWidth: '0ch',
+      showCursor: true,
+      typewriterIndex: 0,
+      animationSpeed: 100 // Faster for modern feel
     }
   },
   computed: {
@@ -151,7 +164,7 @@ export default {
       } else if (this.sortOption.startsWith('amount')) {
         params.sort_amount = this.sortOption.endsWith('asc') ? 'asc' : 'desc';
       }
-      
+
       axios.get('/api/invoice_case1_index', { params })
         .then(response => {
           if (response.data.status === 200) {
@@ -165,7 +178,7 @@ export default {
 
     // When the user clicks on an invoice card, navigate to the edit form
     goToInvoice(id) {
-      // This route name must match your router configuration 
+      // This route name must match your router configuration
       // e.g. { name: 'EditInvoice', path: '/invoices/:id/edit' }
       this.$router.push({ name: 'EditInvoice', params: { id }})
     },
@@ -185,7 +198,40 @@ export default {
         this.currentPage--;
         this.fetchInvoices();
       }
-    }
+    },
+    startTypewriter() {
+      const typeSpeed = this.animationSpeed;
+      const pauseTime = 3000;
+      const deleteSpeed = 200;
+
+      const typeNext = () => {
+        if (this.typewriterIndex < this.fullText.length) {
+          this.displayText += this.fullText[this.typewriterIndex];
+          this.typewriterWidth = `${this.displayText.length}ch`;
+          this.typewriterIndex++;
+          setTimeout(typeNext, typeSpeed);
+        } else {
+          // Pause before deleting
+          setTimeout(() => {
+            this.deleteText();
+          }, pauseTime);
+        }
+      };
+
+      const deleteText = () => {
+        if (this.displayText.length > 0) {
+          this.displayText = this.displayText.slice(0, -1);
+          this.typewriterWidth = `${this.displayText.length}ch`;
+          setTimeout(deleteText, deleteSpeed);
+        } else {
+          this.typewriterIndex = 0;
+          setTimeout(typeNext, 800);
+        }
+      };
+
+      this.deleteText = deleteText;
+      typeNext();
+    },
   },
   watch: {
     // Whenever search, filter, or sort changes, reset to page 1 and re-fetch
@@ -204,6 +250,12 @@ export default {
   },
   mounted() {
     this.fetchInvoices();
+    this.startTypewriter();
+
+    // Smooth cursor animation
+    setInterval(() => {
+      this.showCursor = !this.showCursor;
+    }, 400);
   }
 }
 </script>
@@ -223,22 +275,184 @@ export default {
   --border-radius: 12px;
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   --transition: all 0.3s ease;
+  --neon-blue: #00f3ff;
+  --neon-purple: #8a2be2;
+  --cyber-green: #39ff14;
 }
 
 .invoices-dashboard {
   font-family: 'Poppins', sans-serif;
-  max-width: 1200px;
+  max-width: auto;
   margin: 0 auto;
   padding: 2rem;
   color: var(--dark);
 }
 
 .dashboard-title {
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 2rem;
   color: var(--dark);
-  animation: fadeIn 0.8s ease;
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  font-family: 'Orbitron', 'Poppins', sans-serif;
+}
+
+.typewriter-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1), rgba(138, 43, 226, 0.1));
+    padding: 0.5rem 1.5rem;
+    border-radius: 15px;
+    border: 1px solid rgba(67, 97, 238, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow:
+        0 8px 32px rgba(67, 97, 238, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    min-width: 200px;
+    min-height: 80px;
+    max-width: 400px;
+    max-height: 80px;
+}
+
+.typewriter-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.holographic-text {
+  background: linear-gradient(
+    45deg,
+    var(--neon-blue),
+    var(--neon-purple),
+    var(--cyber-green),
+    var(--neon-blue)
+  );
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holographicShift 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+  position: relative;
+}
+
+.holographic-text::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(45deg, transparent, rgba(0, 243, 255, 0.1), transparent);
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: glitchEffect 4s linear infinite;
+}
+
+.futuristic-cursor {
+  width: 3px;
+  height: 2rem;
+  background: linear-gradient(180deg, var(--neon-blue), var(--cyber-green));
+  margin-left: 5px;
+  border-radius: 2px;
+  box-shadow:
+    0 0 10px var(--neon-blue),
+    0 0 20px var(--neon-blue),
+    0 0 30px var(--neon-blue);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.futuristic-cursor::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -2px;
+  width: 7px;
+  height: calc(100% + 10px);
+  background: radial-gradient(ellipse, rgba(0, 243, 255, 0.3), transparent);
+  border-radius: 50%;
+  animation: cursorGlow 2s ease-in-out infinite alternate;
+}
+
+.futuristic-cursor.pulse {
+  opacity: 0;
+  transform: scaleY(0.8);
+}
+
+/* Futuristic Animations */
+@keyframes holographicShift {
+  0%, 100% {
+    background-position: 0% 50%;
+    filter:
+      drop-shadow(0 0 10px rgba(0, 243, 255, 0.3))
+      drop-shadow(2px 2px 0px rgba(138, 43, 226, 0.1));
+  }
+  50% {
+    background-position: 100% 50%;
+    filter:
+      drop-shadow(0 0 15px rgba(57, 255, 20, 0.4))
+      drop-shadow(-2px -2px 0px rgba(0, 243, 255, 0.1));
+  }
+}
+
+@keyframes cursorGlow {
+  0% {
+    box-shadow:
+      0 0 5px var(--neon-blue),
+      0 0 10px var(--neon-blue),
+      0 0 15px var(--neon-blue);
+    transform: scaleY(1);
+  }
+  100% {
+    box-shadow:
+      0 0 10px var(--cyber-green),
+      0 0 20px var(--cyber-green),
+      0 0 30px var(--cyber-green);
+    transform: scaleY(1.1);
+  }
+}
+
+@keyframes glitchEffect {
+  0%, 90%, 100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  95% {
+    opacity: 0.1;
+    transform: translateX(2px);
+  }
+}
+
+/* Enhanced container glow */
+.typewriter-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--cyber-green));
+  border-radius: 17px;
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(8px);
+  animation: borderGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes borderGlow {
+  0% {
+    opacity: 0.2;
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 0.4;
+    filter: blur(12px);
+  }
 }
 
 /* Toolbar */
@@ -499,5 +713,20 @@ export default {
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-title {
+    font-size: 2rem;
+  }
+
+  .typewriter-container {
+    padding: 0.4rem 1rem;
+  }
+
+  .futuristic-cursor {
+    height: 1.5rem;
+  }
 }
 </style>

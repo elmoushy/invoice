@@ -11,185 +11,162 @@
       </button>
 
       <!-- Render multiple invoice lines -->
-      <div
-        v-for="(line, index) in invoiceData.invoice_lines"
-        :key="index"
-        class="invoice-line-grid"
-      >
-        <!-- Identifier -->
-        <div class="form-row">
-          <label class="form-label">Invoice Line Identifier</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.invoice_line_identifier"
-            readonly
-            :disabled="invoiceData.invoice_type_code === '381'"
-          />
-        </div>
+    <div
+      v-for="(line, index) in invoiceData.invoice_lines"
+      :key="index"
+      class="invoice-line-grid"
+    >
+      <!-- Invoice Line Identifier -->
+      <div class="form-row">
+        <label class="form-label">Invoice Line Identifier</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.invoice_line_identifier"
+        readonly
+        />
+      </div>
 
-        <!-- Invoiced Quantity -->
-        <div class="form-row">
-          <label class="form-label">Invoiced Quantity</label>
-          <div class="quantity-control" v-if="invoiceData.invoice_type_code === '381'">
-            <input
-              type="text"
-              class="form-control"
-              v-model="line.invoiced_quantity"
-              placeholder="Invoiced Quantity"
-              @input="validateInvoicedQuantity(line, $event)"
-            />
-            <div class="quantity-arrows">
-              <button 
-                type="button" 
-                class="arrow-btn up"
-                @click="incrementQuantity(line)"
-                :disabled="isAtMaxQuantity(line)"
-              >▲</button>
-              <button 
-                type="button" 
-                class="arrow-btn down"
-                @click="decrementQuantity(line)"
-                :disabled="isAtMinQuantity(line)"
-              >▼</button>
-            </div>
-          </div>
-          <input
-            v-else
-            type="text"
-            class="form-control"
-            v-model="line.invoiced_quantity"
-            placeholder="Invoiced Quantity"
-            @input="validateInvoicedQuantity(line, $event)"
-          />
-        </div>
+      <!-- Item Name -->
+      <div class="form-row">
+        <label class="form-label">Item Name</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.item_name"
+        placeholder="Item Name"
+        />
+      </div>
 
-        <!-- Unit Measure Code -->
-        <div class="form-row">
-          <label class="form-label">Unit Measure Code</label>
-          <select class="form-select" v-model="line.invoiced_quantity_unit_code">
-            <option value="" disabled>Select Unit</option>
-            <option v-for="unit in units" :key="unit" :value="unit">
-              {{ unit }}
-            </option>
-          </select>
-        </div>
+      <!-- Item Description -->
+      <div class="form-row">
+        <label class="form-label">Item Description</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.item_description"
+        placeholder="Item Description"
+        />
+      </div>
 
-        <!-- Item Gross Price -->
-        <div class="form-row">
-          <label class="form-label">Item Gross Price</label>
-          <div class="form-group currency-group">
-            <input
-              type="text"
-              class="form-control"
-              v-model="line.item_gross_price"
-              placeholder="Item Gross Price"
-              @input="line.item_gross_price = line.item_gross_price.replace(/[^0-9.]/g, '')"
-            />
-            <span class="currency">AED</span>
-          </div>
-        </div>
+      <!-- Item Type -->
+      <div class="form-row">
+        <label class="form-label">Item Type</label>
+        <select class="form-select" v-model="line.item_type">
+        <option value="" disabled>Select Item Type</option>
+        <option value="Goods">Goods</option>
+        <option value="Services">Services</option>
+        </select>
+      </div>
 
-        <!-- Discount Type -->
-        <div class="form-row">
-          <label class="form-label">Discount Type</label>
-          <select class="form-select" v-model="line.discount_type">
-            <option value="" disabled>Select Discount Type</option>
-            <option value="static">Static</option>
-            <option value="percentage">Percentage</option>
-          </select>
-        </div>
+      <!-- Item Classification -->
+      <div class="form-row">
+        <label class="form-label">Item Classification</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.item_classification"
+        placeholder="Item Classification"
+        />
+      </div>
 
-        <!-- Discount Value -->
-        <div class="form-row">
-          <label class="form-label">Discount Value</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.discount_value"
-            placeholder="Discount Value"
-            @input="line.discount_value = line.discount_value.replace(/[^0-9.]/g, '')"
-          />
-        </div>
+      <!-- Invoiced Quantity -->
+      <div class="form-row">
+        <label class="form-label">Invoiced Quantity</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.invoiced_quantity"
+        placeholder="Invoiced Quantity"
+        @input="line.invoiced_quantity = line.invoiced_quantity.replace(/[^0-9.]/g, '')"
+        />
+      </div>
 
-        <!-- Item Net Price (read-only) -->
-        <div class="form-row">
-          <label class="form-label">Item Net Price</label>
-          <div class="form-group currency-group">
-            <input
-              type="text"
-              class="form-control"
-              :value="line.item_net_price"
-              readonly
-            />
-            <span class="currency">AED</span>
-          </div>
-        </div>
+      <!-- Unit Measure Code -->
+      <div class="form-row">
+        <label class="form-label">Unit Measure Code</label>
+        <select class="form-select" v-model="line.invoiced_quantity_unit_code">
+        <option value="" disabled>Select Unit</option>
+        <option v-for="unit in units" :key="unit" :value="unit">
+          {{ unit }}
+        </option>
+        </select>
+      </div>
 
-        <!-- Invoice Line Net Amount (read-only) -->
-        <div class="form-row">
-          <label class="form-label">Invoice Line Net Amount</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.invoice_line_net_amount"
-            readonly
-          />
-        </div>
+      <!-- Item Price Base Quantity -->
+      <div class="form-row">
+        <label class="form-label">Item Price Base Quantity</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.item_price_base_quantity"
+        placeholder="Item Price Base Quantity"
+        />
+      </div>
 
-        <!-- Item Description -->
-        <div class="form-row">
-          <label class="form-label">Item Description</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.item_description"
-            placeholder="Item Description"
-          />
+      <!-- Item Gross Price -->
+      <div class="form-row">
+        <label class="form-label">Item Gross Price</label>
+        <div class="form-group currency-group">
+        <input
+          type="text"
+          class="form-control"
+          v-model="line.item_gross_price"
+          placeholder="Item Gross Price"
+          @input="line.item_gross_price = line.item_gross_price.replace(/[^0-9.]/g, '')"
+        />
+        <span class="currency">AED</span>
         </div>
+      </div>
 
-        <!-- Item Classification -->
-        <div class="form-row">
-          <label class="form-label">Item Classification</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.item_classification"
-            placeholder="Item Classification"
-          />
-        </div>
+      <!-- Discount Type -->
+      <div class="form-row">
+        <label class="form-label">Discount Type</label>
+        <select class="form-select" v-model="line.discount_type">
+        <option value="" disabled>Select Discount Type</option>
+        <option value="static">Static</option>
+        <option value="percentage">Percentage</option>
+        </select>
+      </div>
 
-        <!-- Item Name -->
-        <div class="form-row">
-          <label class="form-label">Item Name</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.item_name"
-            placeholder="Item Name"
-          />
-        </div>
+      <!-- Discount Value -->
+      <div class="form-row">
+        <label class="form-label">Discount Value</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.discount_value"
+        placeholder="Discount Value"
+        @input="line.discount_value = line.discount_value.replace(/[^0-9.]/g, '')"
+        />
+      </div>
 
-        <!-- Item Type -->
-        <div class="form-row">
-          <label class="form-label">Item Type</label>
-          <select class="form-select" v-model="line.item_type">
-            <option value="" disabled>Select Item Type</option>
-            <option value="Goods">Goods</option>
-            <option value="Services">Services</option>
-          </select>
+      <!-- Item Net Price (read-only) -->
+      <div class="form-row">
+        <label class="form-label">Item Net Price</label>
+        <div class="form-group currency-group">
+        <input
+          type="text"
+          class="form-control"
+          :value="line.item_net_price"
+          readonly
+        />
+        <span class="currency">AED</span>
         </div>
+      </div>
 
-        <!-- Item Price Base Quantity -->
-        <div class="form-row">
-          <label class="form-label">Item Price Base Quantity</label>
-          <input
-            type="text"
-            class="form-control"
-            v-model="line.item_price_base_quantity"
-            placeholder="Item Price Base Quantity"
-          />
-        </div>
+      <!-- Invoice Line Net Amount (read-only) -->
+      <div class="form-row">
+        <label class="form-label">Invoice Line Net Amount</label>
+        <input
+        type="text"
+        class="form-control"
+        v-model="line.invoice_line_net_amount"
+        readonly
+        />
+      </div>
+
+
 
         <!-- Invoiced Item Tax Rate (read-only) -->
         <div class="form-row">
@@ -212,6 +189,8 @@
             readonly
           />
         </div>
+
+
 
         <!-- Classification Scheme Identifier (Goods) -->
         <div class="form-row" v-if="line.item_type === 'Goods'">
@@ -243,11 +222,11 @@
             v-model="line.invoiced_item_tax_category_code"
             @change="
               line.invoiced_item_tax_rate =
-          line.invoiced_item_tax_category_code === 'standard_rate'
-            ? 5
-            : line.invoiced_item_tax_category_code === 'Reverse_Charge'
-              ? 5
-              : 0
+                line.invoiced_item_tax_category_code === 'standard_rate'
+                  ? 5
+                  : line.invoiced_item_tax_category_code === 'Reverse_Charge'
+                    ? 5
+                    : 0
             "
           >
             <option value="" disabled>Select Tax Category</option>
@@ -255,7 +234,6 @@
             <option value="Reverse_Charge">Reverse Charge (5% VAT)</option>
             <option value="zero_rated">Zero-rated (0% VAT)</option>
             <option value="exempt">Exempt (0% VAT)</option>
-            <option value="Out_of_scope">Out of scope of tax (0% VAT)</option>
             <!-- Additional options when Margin Scheme is selected -->
             <option v-if="isMarginSchemeSelected" value="second_hand">
               Second hand goods (0% VAT)
@@ -267,17 +245,12 @@
               Collectors items and antiques (0% VAT)
             </option>
           </select>
-          <div
-            v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'"
-            class="reverse-charge-alert"
-          >
+          <div v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'" class="reverse-charge-alert">
             <i class="alert-icon">ℹ️</i>
-            <span
-              >Reverse Charge Mechanism applied: VAT will not be collected by
-              the seller. Buyer is responsible for VAT reporting</span
-            >
+            <span>Reverse Charge Mechanism applied: VAT will not be collected by the seller. Buyer is responsible for VAT reporting</span>
           </div>
         </div>
+
 
         <!-- Tax exemption reason text -->
         <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'zero_rated'">
@@ -295,31 +268,16 @@
           <label class="form-label">Tax Exemption Reason Code</label>
           <select class="form-select" v-model="line.tax_exemption_reason_code">
             <option value="" disabled>Select Exemption Reason</option>
-            <option value="ZRE"
-              >ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option
-            >
-            <option value="ZRL"
-              >ZRL - Zero-Rated Local Supply (Education, healthcare, specific
-              food items)</option
-            >
-            <option value="EXE"
-              >EXE - Exempt Supply (Financial services, bare land sales, local
-              passenger transport)</option
-            >
-            <option value="RCM"
-              >RCM - Reverse Charge Mechanism (VAT paid by buyer)</option
-            >
-            <option value="OSR"
-              >OSR - Out of Scope Revenue (Transactions outside VAT scope)</option
-            >
+            <option value="ZRE">ZRE - Zero-Rated Export (Goods/services exported outside the UAE)</option>
+            <option value="ZRL">ZRL - Zero-Rated Local Supply (Education, healthcare, specific food items)</option>
+            <option value="EXE">EXE - Exempt Supply (Financial services, bare land sales, local passenger transport)</option>
+            <option value="RCM">RCM - Reverse Charge Mechanism (VAT paid by buyer)</option>
+            <option value="OSR">OSR - Out of Scope Revenue (Transactions outside VAT scope)</option>
           </select>
         </div>
 
-        <!-- Item Standard Identifier (for Reverse_Charge) -->
-        <div
-          class="form-row"
-          v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'"
-        >
+        <!-- Item Standard Identifier -->
+        <div class="form-row" v-if="line.invoiced_item_tax_category_code === 'Reverse_Charge'">
           <label class="form-label">Item Standard Identifier</label>
           <input
             type="text"
@@ -327,13 +285,12 @@
             v-model="line.Item_Standard_Identifier"
             placeholder="Item Standard Identifier"
             @input="
-              line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');
-            "
+              line.Item_Standard_Identifier = line.Item_Standard_Identifier.replace(/[^0-9]/g, '');"
           />
         </div>
 
         <!-- Remove line button -->
-        <button class="remove-line-button" @click="removeInvoiceLine(index)" :hidden="invoiceData.invoice_type_code === '381'">
+        <button class="remove-line-button" @click="removeInvoiceLine(index)">
           Remove
         </button>
       </div>
@@ -623,23 +580,23 @@ export default {
       if (invoiceData.value.invoice_type_code === '381') {
         const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
         const originalQty = originalInvoicedQuantities.value[lineIndex]
-        
+
         // Clean input to ensure it's a valid number
         let value = event.target.value.replace(/[^0-9.]/g, '')
         let numValue = parseFloat(value) || 0
-        
+
         // Ensure it's not less than 1
         if (numValue < 1) {
           numValue = 1
         }
-        
+
         // Ensure it doesn't exceed original quantity if we have one
         if (originalQty !== undefined) {
           if (numValue > originalQty) {
             numValue = originalQty
           }
         }
-        
+
         // Update the value
         line.invoiced_quantity = numValue.toString()
       }
@@ -650,7 +607,7 @@ export default {
       if (invoiceData.value.invoice_type_code === '381') {
         const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
         const originalQty = originalInvoicedQuantities.value[lineIndex]
-        
+
         let currentValue = parseFloat(line.invoiced_quantity) || 0
         // Only increment if we're below the original quantity
         if (originalQty !== undefined && currentValue < originalQty) {
@@ -659,7 +616,7 @@ export default {
         }
       }
     }
-    
+
     // Decrement quantity with validation
     const decrementQuantity = (line) => {
       if (invoiceData.value.invoice_type_code === '381') {
@@ -671,13 +628,13 @@ export default {
         }
       }
     }
-    
+
     // Check if at maximum allowed quantity
     const isAtMaxQuantity = (line) => {
       if (invoiceData.value.invoice_type_code === '381') {
         const lineIndex = invoiceData.value.invoice_lines.indexOf(line)
         const originalQty = originalInvoicedQuantities.value[lineIndex]
-        
+
         if (originalQty !== undefined) {
           const currentValue = parseFloat(line.invoiced_quantity) || 0
           return currentValue >= originalQty
@@ -685,7 +642,7 @@ export default {
       }
       return false
     }
-    
+
     // Check if at minimum allowed quantity
     const isAtMinQuantity = (line) => {
       if (invoiceData.value.invoice_type_code === '381') {
@@ -754,7 +711,7 @@ export default {
           line.vat_line_amount = (line.invoice_line_net_amount * rate) / 100
         }
 
-        // 5) **If invoice_type_code is 381 (Credit Note), negate amounts** 
+        // 5) **If invoice_type_code is 381 (Credit Note), negate amounts**
         // so that net/tax appear as negative values.
         if (invoiceData.value.invoice_type_code === '381') {
           line.invoice_line_net_amount = -Math.abs(line.invoice_line_net_amount)

@@ -1,9 +1,23 @@
 <template>
   <div class="container">
+
+
     <!-- Sellers List Section -->
     <div class="section sellers-list animate-in">
       <h3><span class="icon">🏬</span> Sellers List</h3>
-      
+
+          <!-- Conditionally render the Principal ID (TRN) input -->
+    <div v-if="isDisclosedAgentBillingSelected" class="form-group">
+      <label class="form-label">Principal ID (TRN)</label>
+      <input
+        type="text"
+        class="form-control"
+        v-model="invoiceData.principal_id"
+        placeholder="Enter Principal ID (TRN)"
+      />
+      <span class="help-text">Required for Disclosed Agent Billing</span>
+    </div>
+    <br/>
         <!-- Dropdown for existing sellers -->
         <div class="select-row">
       <label class="form-label">Select Seller</label>
@@ -15,17 +29,7 @@
       </select>
     </div>
 
-    <!-- Conditionally render the Principal ID (TRN) input -->
-    <div v-if="isDisclosedAgentBillingSelected" class="form-group">
-      <label class="form-label">Principal ID (TRN)</label>
-      <input
-        type="text"
-        class="form-control"
-        v-model="invoiceData.principal_id"
-        placeholder="Enter Principal ID (TRN)"
-      />
-      <span class="help-text">Required for Disclosed Agent Billing</span>
-    </div>
+
 
     <br/>
       <!-- Button to toggle form for creating a new seller -->
@@ -307,12 +311,12 @@ export default {
 
   computed: {
     isDisclosedAgentBillingSelected() {
-      
+
       const isSelected = this.invoiceData.transactionTypes &&
         this.invoiceData.transactionTypes.some(
           option => option.label === "Disclosed Agent Billing" && option.selected
         );
-      
+
       return isSelected;
     },
     electronicAddressPattern() {
